@@ -1,13 +1,12 @@
 package com.learning_forum.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.learning_forum.domain.USER_ROLE;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 
 import java.time.LocalDate;
 
@@ -15,16 +14,18 @@ import java.time.LocalDate;
 @Getter
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+    @Column(nullable = false, unique = true)
     String username;
     String password;
     String email;
     String phone;
-    String role;
+    @Enumerated(EnumType.STRING)
+    USER_ROLE role = USER_ROLE.USER;
     String fullName;
     LocalDate dob;
-
 }

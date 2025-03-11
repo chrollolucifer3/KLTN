@@ -1,5 +1,6 @@
 package com.learning_forum.dto.request;
 
+import com.learning_forum.domain.USER_ROLE;
 import lombok.*;
 
 import jakarta.validation.constraints.Email;
@@ -39,10 +40,9 @@ public class UserCreationRequest {
     )
     String phone;
 
-    @NotBlank(message = "Role không được để trống")
-    String role;
+    USER_ROLE role = USER_ROLE.USER;
 
-    @NotBlank(message = "Full name không được để trống")
+    @NotBlank(message = "Tên không được để trống")
     String fullName;
 
     LocalDate dob;

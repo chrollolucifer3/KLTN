@@ -2,8 +2,10 @@ package com.learning_forum.controller;
 
 
 import com.learning_forum.dto.request.ApiResponse;
+import com.learning_forum.dto.request.AuthenticationRequest;
 import com.learning_forum.dto.request.UserCreationRequest;
 import com.learning_forum.dto.request.UserUpdateRequest;
+import com.learning_forum.dto.respone.AuthenticationResponse;
 import com.learning_forum.dto.respone.UserResponse;
 import com.learning_forum.entity.User;
 import com.learning_forum.service.UserService;
@@ -24,31 +26,33 @@ public class UserController {
 
     UserService userService;
 
+    // Create user
     @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(200, "Success", userService.createUser(request));
-        return apiResponse;
+        return new ApiResponse<>(200, "Success", userService.createUser(request));
     }
 
+    // Get all users
     @GetMapping
     ApiResponse<List<User>> getAllUsers() {
-        ApiResponse<List<User>> apiResponse = new ApiResponse<>(200, "Success", userService.getAllUsers());
-        return apiResponse;
+        return new ApiResponse<>(200, "Success", userService.getAllUsers());
     }
 
+    // Get user by id
     @GetMapping("{userId}")
     UserResponse getUser(@PathVariable String userId) {
         return userService.getUserById(userId);
     }
 
+    // Delete user
     @DeleteMapping("{userId}")
     void deleteUser(@PathVariable String userId) {
         userService.deleteUserById(userId);
     }
 
+    // Update user
     @PostMapping("{userId}")
     ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest request) {
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(200, "Success", userService.updateUser(userId, request));
-        return apiResponse;
+        return new ApiResponse<>(200, "Success", userService.updateUser(userId, request));
     }
 }
