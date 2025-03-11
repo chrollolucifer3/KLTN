@@ -49,6 +49,7 @@ public class AuthService {
         return new AuthenticationResponse(token, userResponse);
     }
 
+    // Tạo token từ username của user (1 ngày hết hạn)
     private String generateToken(String username) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
