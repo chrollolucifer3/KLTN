@@ -19,8 +19,13 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,9 +50,11 @@ public class UserService {
         if (userRepository.existsUserByUsername(request.getUsername())) {
             errorMap.put("username", "Tài khoản đã tồn tại");
         }
+
         if (userRepository.existsUserByPhone(request.getPhone())) {
             errorMap.put("phone", "Số điện thoại đã tồn tại");
         }
+
         if (userRepository.existsUserByEmail(request.getEmail())) {
             errorMap.put("email", "Email đã tồn tại");
         }
@@ -71,8 +78,6 @@ public class UserService {
         return userMapper.toUserResponseForUser(userRepository.save(user));
     }
 
-    ;
-
     // Get all users
     public List<UserResponseForAdmin> getAllUsers() {
         return userRepository.findAll()
@@ -83,8 +88,9 @@ public class UserService {
     }
 
     // Get user by id
-    public UserResponse getUserById(String id) {
-        return userMapper.toUserResponseForUser(userRepository.findById(id)
+    public UserResponse getMyInfo() {
+        String currentUsername = securityConfig.getCurrentUsername();
+        return userMapper.toUserResponseForUser(userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
     }
 
@@ -94,6 +100,7 @@ public class UserService {
 
     // Update user
     public UserResponse updateUser(String id, UserUpdateRequest request) {
+        log.info("UserService: Updating user {}", id);
         Map<String, String> errorMap = new HashMap<>();
 
         if (userRepository.existsUserByPhone(request.getPhone())) {
@@ -111,7 +118,10 @@ public class UserService {
 
     // Block user
     public void blockUser(String id) {
+        log.info("UserService: Blocking user {}", id);
+
         String currentUsername = securityConfig.getCurrentUsername();
+
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -132,7 +142,7 @@ public class UserService {
             throw new AppException(ErrorCode.SUPER_ADMIN_BLOCKED);
         }
 
-        if (user.getRole() == USER_ROLE.ADMIN) {
+        if (user.getRole() == USER_ROLE.ADMIN && currentUser.getRole() != USER_ROLE.SUPER_ADMIN) {
             log.info("User {} does not have permission to block", currentUser);
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
@@ -144,7 +154,9 @@ public class UserService {
 
     // Unblock user
     public void unblockUser(String id) {
+        log.info("UserService: Unblocking user {}", id);
         String currentUsername = securityConfig.getCurrentUsername();
+
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -163,5 +175,77 @@ public class UserService {
         user.setActive(true);
         userRepository.save(user);
         log.info("User {} is unblocked", user.getUsername());
+    }
+
+    // upload avatar
+    public void uploadAvatar(String id, MultipartFile file) {
+        log.info("UserService: Uploading avatar for user {}", id);
+
+        String currentUsername = securityConfig.getCurrentUsername();
+
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (!user.isActive()) {
+            log.info("User {} is blocked", user.getUsername());
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
+
+        if (!currentUsername.equals(user.getUsername())) {
+            log.info("User {} does not have permission to upload avatar for user {}", currentUser, user);
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        String UPLOAD_DIR = "uploads/avatars/";
+        File uploadFile = new File(UPLOAD_DIR);
+
+        if (!uploadFile.exists()) {
+            uploadFile.mkdirs();
+        }
+
+        // Kiểm tra nếu file rỗng
+        if (file.isEmpty()) {
+            throw new AppException(ErrorCode.FILE_EMPTY);
+        }
+
+        // Kiểm tra định dạng file (chỉ chấp nhận JPG, PNG, JPEG, WEBP)
+        String contentType = file.getContentType();
+        if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))
+                && !contentType.equals("image/jpg") && !contentType.equals("image/webp")) {
+            throw new AppException(ErrorCode.INVALID_FILE_TYPE);
+        }
+
+        // Kiểm tra dung lượng file (giới hạn 5MB)
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new AppException(ErrorCode.FILE_TOO_LARGE);
+        }
+
+        try {
+            // Xóa avatar cũ nếu tồn tại
+            if (user.getAvatarUrl() != null) {
+                Path oldAvatarPath = Paths.get(user.getAvatarUrl().substring(1)); // Bỏ dấu '/' đầu tiên
+                File oldAvatarFile = oldAvatarPath.toFile();
+                if (oldAvatarFile.exists()) {
+                    oldAvatarFile.delete();  // Xóa file cũ
+                    log.info("Deleted old avatar: {}", oldAvatarPath);
+                }
+            }
+
+            // Lưu avatar mới
+            String filename = id + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(UPLOAD_DIR + filename);
+            Files.write(filePath, file.getBytes());
+
+            // Cập nhật avatarUrl
+            user.setAvatarUrl("/" + UPLOAD_DIR + filename); // Thêm "/" để giữ đúng đường dẫn
+            userRepository.save(user);
+            log.info("Uploaded new avatar: {}", filePath);
+
+        } catch (Exception e) {
+            log.error("Error uploading file", e);
+            throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+        }
     }
 }

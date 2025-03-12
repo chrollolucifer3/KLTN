@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.Authentication;
+//import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -63,6 +64,12 @@ public class SecurityConfig {
                 )
         );
 
+        // Xử lý lỗi chưa đăng nhập (UNAUTHORIZED)
+        httpSecurity.exceptionHandling(exceptionHandling ->
+                exceptionHandling.authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+        );
+
+        // Xử lý lỗi không có quyền truy cập (FORBIDDEN)
         httpSecurity.exceptionHandling(exceptionHandling ->
                 exceptionHandling.accessDeniedHandler(customAccessDeniedHandler())
         );
@@ -100,9 +107,24 @@ public class SecurityConfig {
     //Lấy tài khoản đang đăng nhập
     public String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof String) {
-            return authentication.getPrincipal().toString();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-        throw new AppException(ErrorCode.UNAUTHORIZED);
+
+        return authentication.getName(); // Lấy username trực tiếp
     }
+
+//    public String getCurrentUserRole() {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        if (authentication == null || !authentication.isAuthenticated()) {
+//            throw new AppException(ErrorCode.UNAUTHORIZED);
+//        }
+//
+//        return authentication.getAuthorities().stream()
+//                .findFirst() // Lấy role đầu tiên (vì mỗi user chỉ có 1 role)
+//                .map(GrantedAuthority::getAuthority) // Lấy tên quyền (VD: "ROLE_ADMIN")
+//                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+//    }
 }

@@ -39,4 +39,7 @@ public class User {
     public void setActive(boolean active) {
         isActive = active;
     }
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
 }

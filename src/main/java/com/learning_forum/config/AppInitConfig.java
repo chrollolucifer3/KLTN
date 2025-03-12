@@ -29,6 +29,7 @@ public class AppInitConfig {
                         .username("admin")
                         .password(passwordEncoder.encode("Admin@123"))
                         .role(USER_ROLE.SUPER_ADMIN)
+                        .isActive(true)
                         .build();
 
                 userRepository.save(user);

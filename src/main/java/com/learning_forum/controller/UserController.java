@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -38,10 +39,10 @@ public class UserController {
         return new ApiResponse<>(200, "Success", userService.getAllUsers());
     }
 
-    // Get user by id
-    @GetMapping("{userId}")
-    UserResponse getUser(@PathVariable String userId) {
-        return userService.getUserById(userId);
+    // Get my profile
+    @GetMapping("myInfo")
+    UserResponse getMyInfo() {
+        return userService.getMyInfo();
     }
 
 //    // Delete user
@@ -71,4 +72,12 @@ public class UserController {
         userService.unblockUser(userId);
         return new ApiResponse<>(200, "Success");
     }
+
+    // upload avatar
+    @PostMapping("avatar/{userId}")
+    ApiResponse<?> uploadAvatar(@PathVariable String userId, @RequestParam("avatarUrl") MultipartFile file) {
+        userService.uploadAvatar(userId, file);
+        return new ApiResponse<>(200, "Success");
+    }
+
 }

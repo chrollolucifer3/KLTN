@@ -20,6 +20,11 @@ public enum ErrorCode {
     //AUTHORIZED
     UNAUTHORIZED(401, "Unauthorized"),
     UNCAUGHT_EXCEPTION(500, "Uncaught exception"),
+    //FILE
+    FILE_UPLOAD_FAILED(400, "Internal server error"),
+    FILE_EMPTY(400, "Ảnh không được để trống"),
+    INVALID_FILE_TYPE(400, "Định dạng file không hợp lệ"),
+    FILE_TOO_LARGE(400, "Dung lượng file Không được vượt quá 5MB"),
     ;
     private final int code;
     private final String message;
