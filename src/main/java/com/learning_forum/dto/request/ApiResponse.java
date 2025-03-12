@@ -1,14 +1,14 @@
 package com.learning_forum.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApiResponse<T> {
@@ -22,5 +22,10 @@ public class ApiResponse<T> {
         this.code = code;
         this.message = message;
         this.result = result;
+    }
+
+    public ApiResponse(int code, String message) {
+        this.code = code;
+        this.message = message;
     }
 }

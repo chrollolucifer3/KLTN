@@ -9,6 +9,9 @@ public enum ErrorCode {
     USER_ALREADY_EXISTED(409, "Tài khoản đã tồn tại"),
     USERNAME_INVALID(400, "Username is invalid"),
     INVALID_PASSWORD(400, "Password is invalid"),
+    USER_BLOCKED(403, "Tài khoản đã bị khóa"),
+    USER_UNBLOCKED(403, "Tài khoản chưa bị khóa"),
+    SUPER_ADMIN_BLOCKED(403, "Bạn không thể khóa tài khoản này"),
     //Valid
     VALIDATION_FAILED(400, "Validation failed"),
     //Server

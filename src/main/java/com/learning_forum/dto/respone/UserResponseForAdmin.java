@@ -13,11 +13,17 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class UserResponse {
+public class UserResponseForAdmin {
+
     String id;
     String username;
     String email;
     String phone;
     String fullName;
     LocalDate dob;
+
+    @Enumerated(EnumType.STRING)
+    USER_ROLE role;
+
+    Boolean isActive;
 }

@@ -2,17 +2,16 @@ package com.learning_forum.controller;
 
 
 import com.learning_forum.dto.request.ApiResponse;
-import com.learning_forum.dto.request.AuthenticationRequest;
 import com.learning_forum.dto.request.UserCreationRequest;
 import com.learning_forum.dto.request.UserUpdateRequest;
-import com.learning_forum.dto.respone.AuthenticationResponse;
 import com.learning_forum.dto.respone.UserResponse;
-import com.learning_forum.entity.User;
+import com.learning_forum.dto.respone.UserResponseForAdmin;
 import com.learning_forum.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,8 +32,9 @@ public class UserController {
     }
 
     // Get all users
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPER_ADMIN')")
     @GetMapping
-    ApiResponse<List<User>> getAllUsers() {
+    ApiResponse<List<UserResponseForAdmin>> getAllUsers() {
         return new ApiResponse<>(200, "Success", userService.getAllUsers());
     }
 
@@ -44,15 +44,31 @@ public class UserController {
         return userService.getUserById(userId);
     }
 
-    // Delete user
-    @DeleteMapping("{userId}")
-    void deleteUser(@PathVariable String userId) {
-        userService.deleteUserById(userId);
-    }
+//    // Delete user
+//    @DeleteMapping("{userId}")
+//    void deleteUser(@PathVariable String userId) {
+//        userService.deleteUserById(userId);
+//    }
 
     // Update user
     @PostMapping("{userId}")
     ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest request) {
         return new ApiResponse<>(200, "Success", userService.updateUser(userId, request));
+    }
+
+    // Block user
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPER_ADMIN')")
+    @PostMapping("block/{userId}")
+    ApiResponse<?> blockUser(@PathVariable String userId) {
+        userService.blockUser(userId);
+        return new ApiResponse<>(200, "Success");
+    }
+
+    // Unblock user
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPER_ADMIN')")
+    @PostMapping("unblock/{userId}")
+    ApiResponse<?> unblockUser(@PathVariable String userId) {
+        userService.unblockUser(userId);
+        return new ApiResponse<>(200, "Success");
     }
 }

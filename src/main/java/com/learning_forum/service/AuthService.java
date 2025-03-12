@@ -35,28 +35,34 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.secret = secret;
     }
+
     // Login
     public AuthenticationResponse login(AuthenticationRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        if (!user.getIsActive()) {
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new AppException(ErrorCode.INVALID_PASSWORD);
         }
 
-        UserResponse userResponse = userMapper.toUserResponse(user);
-        var token = generateToken(user.getUsername());
+        UserResponse userResponse = userMapper.toUserResponseForUser(user);
+        var token = generateToken(user);
         return new AuthenticationResponse(token, userResponse);
     }
 
     // Tạo token từ username của user (1 ngày hết hạn)
-    private String generateToken(String username) {
+    private String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(username)
+                .subject(user.getUsername())
                 .issuer("learning-forum")
                 .issueTime(new Date())
                 .expirationTime(new Date(System.currentTimeMillis() + 86400000)) // 1 ngày
+                .claim("role", user.getRole())
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);

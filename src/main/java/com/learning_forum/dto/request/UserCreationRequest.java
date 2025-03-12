@@ -1,15 +1,14 @@
 package com.learning_forum.dto.request;
 
 import com.learning_forum.domain.USER_ROLE;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.*;
 import lombok.*;
-
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+
 
 @Data
 @NoArgsConstructor
@@ -40,10 +39,15 @@ public class UserCreationRequest {
     )
     String phone;
 
-    USER_ROLE role = USER_ROLE.USER;
+    @Enumerated(EnumType.STRING)
+    USER_ROLE role;
 
     @NotBlank(message = "Tên không được để trống")
+    @Pattern(regexp = "^[^0-9]*$", message = "Tên không được chứa số")
     String fullName;
 
+    @NotNull
     LocalDate dob;
+
+    Boolean isActive;
 }

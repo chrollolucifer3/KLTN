@@ -1,7 +1,6 @@
 package com.learning_forum.exception;
 
 import com.learning_forum.dto.request.ApiResponse;
-import jakarta.annotation.Nullable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
