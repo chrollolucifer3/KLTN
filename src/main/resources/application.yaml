@@ -9,6 +9,10 @@ spring:
     username: root
     password: cuong97
     driver-class-name: com.mysql.cj.jdbc.Driver
+  task:
+    scheduling:
+      pool:
+        size: 5
 
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
@@ -17,4 +21,7 @@ spring:
     show-sql: true
 
 jwt:
-    secret: "czxczxchklZHXkhlekeklenwlknklasndklasndaskldnaslkdnaskldnaslkddsadasdad"
+  secret: "czxczxchklZHXkhlekeklenwlknklasndklasndaskldnaslkdnaskldnaslkddsadasdad"
+  expiration: 1
+  refreshable-duration: 1
+

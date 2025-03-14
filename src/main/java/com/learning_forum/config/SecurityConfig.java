@@ -3,45 +3,40 @@ package com.learning_forum.config;
 import com.learning_forum.exception.AppException;
 import com.learning_forum.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+
 import org.springframework.security.core.Authentication;
-//import org.springframework.security.core.GrantedAuthority;
+
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
-import javax.crypto.spec.SecretKeySpec;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig {
 
-    @Value("${jwt.secret}")
-    private String secret;
+    CustomJwtDecoder customJwtDecoder;
+    JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    // Dùng để mã hóa mật khẩu
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(10);
-    }
-
-    @Bean
-    public CustomAccessDeniedHandler customAccessDeniedHandler() {
-        return new CustomAccessDeniedHandler();
-    }
+    String[] PUBLIC_URLS = {
+            "/users",
+            "/auth/login",
+            "/auth/logout",
+            "/auth/refresh"
+    };
 
     /**
      * Cấu hình Spring Security cho ứng dụng:
@@ -52,32 +47,25 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.authorizeHttpRequests( request ->
-                        request.requestMatchers(HttpMethod.POST, "/users").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                                .anyRequest().authenticated());
-        // Cấu hình xác thực bằng JWT
-        httpSecurity.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwt -> jwt
-                        .decoder(jwtDecoder())
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter()) // Map roles từ JWT
+
+        httpSecurity
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers(HttpMethod.POST, PUBLIC_URLS).permitAll()
+                        .anyRequest().authenticated()
                 )
-        );
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(
+                        JwtConfigurer -> JwtConfigurer
+                        .decoder(customJwtDecoder)
+                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                ))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint))
 
-        // Xử lý lỗi chưa đăng nhập (UNAUTHORIZED)
-        httpSecurity.exceptionHandling(exceptionHandling ->
-                exceptionHandling.authenticationEntryPoint(new CustomAuthenticationEntryPoint())
-        );
+                .csrf(AbstractHttpConfigurer::disable);
 
-        // Xử lý lỗi không có quyền truy cập (FORBIDDEN)
-        httpSecurity.exceptionHandling(exceptionHandling ->
-                exceptionHandling.accessDeniedHandler(customAccessDeniedHandler())
-        );
-
-        // Tắt CSRF vì ứng dụng sử dụng JWT thay vì session-based authentication
-        httpSecurity.csrf(AbstractHttpConfigurer::disable);
         return httpSecurity.build();
     }
+
 
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
@@ -95,14 +83,6 @@ public class SecurityConfig {
      * - Sử dụng NimbusJwtDecoder để kiểm tra tính hợp lệ của JWT.
      * - Dùng thuật toán HMAC SHA-256 để xác thực chữ ký của JWT.
      */
-    @Bean
-    JwtDecoder jwtDecoder() {
-        SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
-        return NimbusJwtDecoder
-                .withSecretKey(secretKeySpec)
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
-    }
 
     //Lấy tài khoản đang đăng nhập
     public String getCurrentUsername() {

@@ -11,6 +11,7 @@ import java.util.Map;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ApiResponse<T> {
     private int code;
     private String message;
