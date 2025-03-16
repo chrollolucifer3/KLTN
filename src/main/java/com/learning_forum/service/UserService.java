@@ -160,7 +160,8 @@ public class UserService {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (user.isActive()) {
             log.info("User {} is already unblocked", user.getUsername());
@@ -186,7 +187,8 @@ public class UserService {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (!user.isActive()) {
             log.info("User {} is blocked", user.getUsername());

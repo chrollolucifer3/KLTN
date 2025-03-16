@@ -6,6 +6,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Set;
 
 @Setter
 @Getter
@@ -41,5 +43,12 @@ public class User {
     }
 
     @Column(name = "avatar_url")
-    private String avatarUrl;
+    String avatarUrl;
+
+    @Column(nullable = false, updatable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<Post> posts;
 }

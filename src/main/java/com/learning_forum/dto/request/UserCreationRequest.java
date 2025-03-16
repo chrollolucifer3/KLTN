@@ -50,4 +50,5 @@ public class UserCreationRequest {
     LocalDate dob;
 
     Boolean isActive;
+    LocalDate createdAt;
 }

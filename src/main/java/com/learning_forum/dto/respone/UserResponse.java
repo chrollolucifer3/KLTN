@@ -20,4 +20,5 @@ public class UserResponse {
     String phone;
     String fullName;
     LocalDate dob;
+    LocalDate createdDate;
 }
