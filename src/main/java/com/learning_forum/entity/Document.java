@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "notifications")
-public class Notification {
+@Table(name = "documents")
+public class Document {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
@@ -23,13 +23,16 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     User user;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    String message;
+    @ManyToOne
+    @JoinColumn(name = "post_id")
+    Post post; // Nếu là tài liệu đính kèm bài viết
 
     @Column(nullable = false)
-    Boolean isRead = false;
+    private String fileName;
+
+    @Column(nullable = false)
+    private String fileUrl;
 
     @Column(nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime uploadedAt = LocalDateTime.now();
 }

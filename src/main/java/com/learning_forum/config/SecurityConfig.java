@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -47,21 +48,22 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-
+        log.info("Security Filter Chain");
         httpSecurity
+                .cors(Customizer.withDefaults()) // Sử dụng cấu hình CORS mặc định
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers(HttpMethod.POST, PUBLIC_URLS).permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers(HttpMethod.POST, PUBLIC_URLS).permitAll() // Cho phép POST tới các URL public
+                        .anyRequest().authenticated() // Các request còn lại cần xác thực
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(
-                        JwtConfigurer -> JwtConfigurer
-                        .decoder(customJwtDecoder)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                        JwtConfigurer -> JwtConfigurer // Cấu hình xác thực JWT
+                        .decoder(customJwtDecoder) // Sử dụng custom JWT decoder
+                        .jwtAuthenticationConverter(jwtAuthenticationConverter()) // Sử dụng custom JWT authentication converter
                 ))
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)) // Xử lý exception khi xác thực JWT thất bại
 
-                .csrf(AbstractHttpConfigurer::disable);
+                .csrf(AbstractHttpConfigurer::disable); // Vô hiệu hóa CSRF
 
         return httpSecurity.build();
     }

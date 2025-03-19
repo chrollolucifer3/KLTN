@@ -13,23 +13,25 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "notifications")
-public class Notification {
+@Table(name = "comment_replies")
+public class CommentReply {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
+
+    @ManyToOne
+    @JoinColumn(name = "comment_id", nullable = false)
+    Comment comment; // Bình luận gốc
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    User user;
+    User user; // Người phản hồi
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    String message;
+    String content; // Nội dung phản hồi
 
-    @Column(nullable = false)
-    Boolean isRead = false;
-
-    @Column(nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     LocalDateTime createdAt = LocalDateTime.now();
+    LocalDateTime updatedAt = LocalDateTime.now();
+
 }

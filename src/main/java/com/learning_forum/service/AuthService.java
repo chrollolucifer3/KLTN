@@ -109,7 +109,6 @@ public class AuthService {
                 .toInstant().plus(REFRESHABLE_DURATION, ChronoUnit.DAYS).toEpochMilli())
                 : signedJWT.getJWTClaimsSet().getExpirationTime();
         boolean verified = signedJWT.verify(verifier);
-
         if (!(verified && expiryTime.after(new Date()))) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }

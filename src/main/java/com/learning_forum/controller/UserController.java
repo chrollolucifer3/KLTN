@@ -41,15 +41,9 @@ public class UserController {
 
     // Get my profile
     @GetMapping("myInfo")
-    UserResponse getMyInfo() {
-        return userService.getMyInfo();
+    ApiResponse<UserResponse> getMyInfo() {
+        return new ApiResponse<>(200, "Success", userService.getMyInfo());
     }
-
-//    // Delete user
-//    @DeleteMapping("{userId}")
-//    void deleteUser(@PathVariable String userId) {
-//        userService.deleteUserById(userId);
-//    }
 
     // Update user
     @PostMapping("{userId}")
