@@ -40,6 +40,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ApiResponse<AuthenticationResponse> refreshToken(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
+//        System.out.println("refreshToken" + request);
         AuthenticationResponse response = authService.refreshToken(request);
         return new ApiResponse<>(200, "Success", response);
     }

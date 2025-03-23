@@ -22,6 +22,6 @@ spring:
 
 jwt:
   secret: "czxczxchklZHXkhlekeklenwlknklasndklasndaskldnaslkdnaskldnaslkddsadasdad"
-  expiration: 1
-  refreshable-duration: 1
+  expiration: 3
+  refreshable-duration: 3
 

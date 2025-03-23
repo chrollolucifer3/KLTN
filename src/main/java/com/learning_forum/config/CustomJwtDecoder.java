@@ -20,7 +20,7 @@ import java.text.ParseException;
 import java.util.Objects;
 
 @Component
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE )
 public class CustomJwtDecoder implements JwtDecoder {
 
     @Value("${jwt.secret}")

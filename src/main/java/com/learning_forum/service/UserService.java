@@ -6,6 +6,7 @@ import com.learning_forum.domain.USER_ROLE;
 import com.learning_forum.dto.request.UserCreationRequest;
 import com.learning_forum.dto.request.UserUpdateRequest;
 
+import com.learning_forum.dto.respone.UserListResponse;
 import com.learning_forum.dto.respone.UserResponse;
 import com.learning_forum.dto.respone.UserResponseForAdmin;
 import com.learning_forum.entity.User;
@@ -17,6 +18,12 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,6 +33,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,14 +86,43 @@ public class UserService {
         return userMapper.toUserResponseForUser(userRepository.save(user));
     }
 
-    // Get all users
-    public List<UserResponseForAdmin> getAllUsers() {
-        return userRepository.findAll()
-                .stream() // Chuyển List<User> -> Stream<User>
-                .filter(user -> user.getRole() != USER_ROLE.SUPER_ADMIN)
-                .map(userMapper::toUserResponseForAdmin)  // Chuyển User -> UserResponse
-                .collect(Collectors.toList()); // Chuyển Stream<UserResponse> -> List<UserResponse>
+    public UserListResponse getAllUsers(int page, int size, String sortBy, String search) {
+        //  Đảm bảo page không bị âm (Spring Boot đánh số trang từ 0)
+        int pageIndex = Math.max(page - 1, 0);
+
+        //  Tạo Pageable với sắp xếp giảm dần (descending)
+        Pageable pageable = PageRequest.of(pageIndex, size, Sort.by(Sort.Direction.DESC, sortBy));
+
+        // Tạo Specification để lọc bỏ SUPER_ADMIN và tìm kiếm theo username, email, phone, fullName
+        Specification<User> spec = getUserSpecification(search);
+
+        Page<User> users = userRepository.findAll(spec, pageable);
+        List<UserResponseForAdmin> user = users.getContent()
+                .stream()
+                .map(userMapper::toUserResponseForAdmin)
+                .toList();
+
+        return new UserListResponse(user, users.getTotalElements(), users.getTotalPages(), page, size);
     }
+
+    private static @NotNull Specification<User> getUserSpecification(String search) {
+        Specification<User> spec = (root, query, criteriaBuilder) ->
+                criteriaBuilder.notEqual(root.get("role"), "SUPER_ADMIN"); // Lọc bỏ SUPER_ADMIN
+        // Tạo Specification để tìm kiếm theo username, email, phone, fullName
+        if (search != null && !search.trim().isEmpty()) {
+            Specification<User> searchSpec = (root, query, criteriaBuilder) ->
+                    criteriaBuilder.or(
+                            criteriaBuilder.like(root.get("username"), "%" + search + "%"),
+                            criteriaBuilder.like(root.get("email"), "%" + search + "%"),
+                            criteriaBuilder.like(root.get("phone"), "%" + search + "%"),
+                            criteriaBuilder.like(root.get("fullName"), "%" + search + "%")
+                    );
+
+            spec = spec.and(searchSpec);
+        }
+        return spec;
+    }
+
 
     // Get user by id
     public UserResponse getMyInfo() {

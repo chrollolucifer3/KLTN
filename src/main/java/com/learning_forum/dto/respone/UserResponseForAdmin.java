@@ -26,4 +26,5 @@ public class UserResponseForAdmin {
     USER_ROLE role;
 
     Boolean isActive;
+    LocalDate createdAt;
 }

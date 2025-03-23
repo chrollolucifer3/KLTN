@@ -19,7 +19,6 @@ public class CommentReply {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-
     @ManyToOne
     @JoinColumn(name = "comment_id", nullable = false)
     Comment comment; // Bình luận gốc

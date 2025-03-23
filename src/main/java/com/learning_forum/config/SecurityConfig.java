@@ -48,7 +48,7 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        log.info("Security Filter Chain");
+
         httpSecurity
                 .cors(Customizer.withDefaults()) // Sử dụng cấu hình CORS mặc định
                 .authorizeHttpRequests(request -> request

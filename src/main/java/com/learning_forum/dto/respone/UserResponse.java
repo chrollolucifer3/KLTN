@@ -1,8 +1,5 @@
 package com.learning_forum.dto.respone;
 
-import com.learning_forum.domain.USER_ROLE;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -20,5 +17,5 @@ public class UserResponse {
     String phone;
     String fullName;
     LocalDate dob;
-    LocalDate createdDate;
+    LocalDate createdAt;
 }

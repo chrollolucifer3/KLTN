@@ -4,6 +4,7 @@ package com.learning_forum.controller;
 import com.learning_forum.dto.request.ApiResponse;
 import com.learning_forum.dto.request.UserCreationRequest;
 import com.learning_forum.dto.request.UserUpdateRequest;
+import com.learning_forum.dto.respone.UserListResponse;
 import com.learning_forum.dto.respone.UserResponse;
 import com.learning_forum.dto.respone.UserResponseForAdmin;
 import com.learning_forum.service.UserService;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,9 +36,15 @@ public class UserController {
 
     // Get all users
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPER_ADMIN')")
-    @GetMapping
-    ApiResponse<List<UserResponseForAdmin>> getAllUsers() {
-        return new ApiResponse<>(200, "Success", userService.getAllUsers());
+    @GetMapping("getAll")
+    ApiResponse<UserListResponse> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(required = false) String search
+    ) {
+        UserListResponse users = userService.getAllUsers(page, size, sortBy, search);
+        return new ApiResponse<>(200, "Success", users);
     }
 
     // Get my profile

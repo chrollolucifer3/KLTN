@@ -1,13 +1,13 @@
 package com.learning_forum.dto.request;
 
 import com.learning_forum.domain.USER_ROLE;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
 @Data
@@ -50,5 +50,7 @@ public class UserCreationRequest {
     LocalDate dob;
 
     Boolean isActive;
-    LocalDate createdAt;
+    @Column(nullable = false, updatable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    LocalDateTime createdAt = LocalDateTime.now();
 }

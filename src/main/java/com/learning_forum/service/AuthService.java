@@ -101,26 +101,28 @@ public class AuthService {
 
     public SignedJWT verifyToken(String token, boolean isRefresh)
             throws JOSEException, ParseException {
+//        System.out.println("Received token: " + token);
 
         JWSVerifier verifier = new MACVerifier(secret.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
-        Date expiryTime = (isRefresh)
-                ? new Date(signedJWT.getJWTClaimsSet().getIssueTime()
-                .toInstant().plus(REFRESHABLE_DURATION, ChronoUnit.DAYS).toEpochMilli())
-                : signedJWT.getJWTClaimsSet().getExpirationTime();
+
         boolean verified = signedJWT.verify(verifier);
-        if (!(verified && expiryTime.after(new Date()))) {
+
+        // Nếu không phải refresh token thì kiểm tra hạn sử dụng
+        if (!verified || (!isRefresh && signedJWT.getJWTClaimsSet().getExpirationTime().before(new Date()))) {
+            System.out.println("Token không hợp lệ hoặc đã hết hạn!");
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        // Lấy jwtID và kiểm tra null trước khi gọi existsById
+        // Kiểm tra xem token có bị revoke không
         String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
         if (jwtId != null && invalidatedTokenRepository.existsById(jwtId)) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        return signedJWT; // Trả về signedJWT nếu token hợp lệ
+        return signedJWT;
     }
+
 
     //Logout
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
@@ -142,7 +144,7 @@ public class AuthService {
 
     public AuthenticationResponse refreshToken(RefreshRequest request)
             throws ParseException, JOSEException {
-
+        System.out.println(request.getToken());
         var signedJWT = verifyToken(request.getToken() , true);
         var jit = signedJWT.getJWTClaimsSet().getJWTID();
         var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
@@ -157,9 +159,10 @@ public class AuthService {
         var username = signedJWT.getJWTClaimsSet().getSubject();
         var user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
+//        System.out.println("User: " + user);
         UserResponse userResponse = userMapper.toUserResponseForUser(user);
         var token = generateToken(user);
+//        System.out.println(token);
         return new AuthenticationResponse(token, userResponse);
     }
 }
