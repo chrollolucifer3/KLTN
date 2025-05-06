@@ -13,15 +13,23 @@ spring:
     scheduling:
       pool:
         size: 5
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+  web:
+    resources:
+      static-locations: file:uploads/
 
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
-    show-sql: true
 
 jwt:
-  secret: "czxczxchklZHXkhlekeklenwlknklasndklasndaskldnaslkdnaskldnaslkddsadasdad"
+  secret: "7M/T%}Om]:Uq'Qi8cqG_k28R:>nvD,lR-]Ug6P*EXI9~$-y-Vh(w?oL]:2(m"
   expiration: 3
   refreshable-duration: 3
 
+file:
+  upload-dir: uploads/Image

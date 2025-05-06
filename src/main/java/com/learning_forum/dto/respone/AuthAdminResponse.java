@@ -9,6 +9,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 @Builder
-public class AuthenticationResponse {
-    private String clientToken;
+public class AuthAdminResponse {
+    private String adminToken;
 }

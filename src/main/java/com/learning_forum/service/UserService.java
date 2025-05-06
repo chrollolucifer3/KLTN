@@ -33,10 +33,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -52,7 +50,7 @@ public class UserService {
 
     // Create user
     public UserResponse createUser(UserCreationRequest request) {
-
+        log.info("Create User with request: {}", request);
         Map<String, String> errorMap = new HashMap<>();
 
         if (userRepository.existsUserByUsername(request.getUsername())) {
@@ -86,12 +84,15 @@ public class UserService {
         return userMapper.toUserResponseForUser(userRepository.save(user));
     }
 
-    public UserListResponse getAllUsers(int page, int size, String sortBy, String search) {
+    // Get all users
+    public UserListResponse getAllUsers(int page, int size, String sortBy, String order, String search) {
+        log.info("UserService: Getting all users with page: {}, size: {}, sortBy: {}, order: {}, search: {}", page, size, sortBy, order, search);
         //  Đảm bảo page không bị âm (Spring Boot đánh số trang từ 0)
         int pageIndex = Math.max(page - 1, 0);
 
         //  Tạo Pageable với sắp xếp giảm dần (descending)
-        Pageable pageable = PageRequest.of(pageIndex, size, Sort.by(Sort.Direction.DESC, sortBy));
+        Sort.Direction direction = Sort.Direction.fromString(order);
+        Pageable pageable = PageRequest.of(pageIndex, size, Sort.by(direction, sortBy));
 
         // Tạo Specification để lọc bỏ SUPER_ADMIN và tìm kiếm theo username, email, phone, fullName
         Specification<User> spec = getUserSpecification(search);
@@ -105,6 +106,7 @@ public class UserService {
         return new UserListResponse(user, users.getTotalElements(), users.getTotalPages(), page, size);
     }
 
+    // Tạo Specification để lọc bỏ SUPER_ADMIN và tìm kiếm theo username, email, phone, fullName
     private static @NotNull Specification<User> getUserSpecification(String search) {
         Specification<User> spec = (root, query, criteriaBuilder) ->
                 criteriaBuilder.notEqual(root.get("role"), "SUPER_ADMIN"); // Lọc bỏ SUPER_ADMIN
@@ -123,11 +125,11 @@ public class UserService {
         return spec;
     }
 
-
     // Get user by id
-    public UserResponse getMyInfo() {
+    public UserResponseForAdmin getMyInfo() {
+        log.info("UserService: Getting my info");
         String currentUsername = securityConfig.getCurrentUsername();
-        return userMapper.toUserResponseForUser(userRepository.findByUsername(currentUsername)
+        return userMapper.toUserResponseForAdmin(userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
     }
 
@@ -148,8 +150,13 @@ public class UserService {
         }
 
         User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        userMapper.updateUser(user, request);
 
+        request.setDob(Optional.ofNullable(request.getDob()).orElse(user.getDob()));
+        request.setEmail(Optional.ofNullable(request.getEmail()).orElse(user.getEmail()));
+        request.setPhone(Optional.ofNullable(request.getPhone()).orElse(user.getPhone()));
+        request.setFullName(Optional.ofNullable(request.getFullName()).orElse(user.getFullName()));
+
+        userMapper.updateUser(user, request);
         return userMapper.toUserResponseForUser(userRepository.save(user));
     }
 

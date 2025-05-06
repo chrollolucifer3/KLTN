@@ -27,6 +27,10 @@ public class Document {
     @JoinColumn(name = "post_id")
     Post post; // Nếu là tài liệu đính kèm bài viết
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    Category category;
+
     @Column(nullable = false)
     private String fileName;
 

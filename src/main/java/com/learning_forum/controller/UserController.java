@@ -12,12 +12,9 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,7 +28,11 @@ public class UserController {
     // Create user
     @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
-        return new ApiResponse<>(200, "Success", userService.createUser(request));
+        return ApiResponse.<UserResponse>builder()
+                .code(200)
+                .message("Success")
+                .result(userService.createUser(request))
+                .build();
     }
 
     // Get all users
@@ -41,22 +42,34 @@ public class UserController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "ASC") String order,
             @RequestParam(required = false) String search
     ) {
-        UserListResponse users = userService.getAllUsers(page, size, sortBy, search);
-        return new ApiResponse<>(200, "Success", users);
+        return ApiResponse.<UserListResponse>builder()
+                .code(200)
+                .message("Success")
+                .result(userService.getAllUsers(page, size, sortBy, order, search))
+                .build();
     }
 
     // Get my profile
     @GetMapping("myInfo")
-    ApiResponse<UserResponse> getMyInfo() {
-        return new ApiResponse<>(200, "Success", userService.getMyInfo());
+    ApiResponse<UserResponseForAdmin> getMyInfo() {
+        return ApiResponse.<UserResponseForAdmin>builder()
+                .code(200)
+                .message("Success")
+                .result(userService.getMyInfo())
+                .build();
     }
 
     // Update user
     @PostMapping("{userId}")
     ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest request) {
-        return new ApiResponse<>(200, "Success", userService.updateUser(userId, request));
+        return ApiResponse.<UserResponse>builder()
+                .code(200)
+                .message("Success")
+                .result(userService.updateUser(userId, request))
+                .build();
     }
 
     // Block user
@@ -64,7 +77,10 @@ public class UserController {
     @PostMapping("block/{userId}")
     ApiResponse<?> blockUser(@PathVariable String userId) {
         userService.blockUser(userId);
-        return new ApiResponse<>(200, "Success");
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
     }
 
     // Unblock user
@@ -72,14 +88,19 @@ public class UserController {
     @PostMapping("unblock/{userId}")
     ApiResponse<?> unblockUser(@PathVariable String userId) {
         userService.unblockUser(userId);
-        return new ApiResponse<>(200, "Success");
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
     }
 
     // upload avatar
     @PostMapping("avatar/{userId}")
     ApiResponse<?> uploadAvatar(@PathVariable String userId, @RequestParam("avatarUrl") MultipartFile file) {
         userService.uploadAvatar(userId, file);
-        return new ApiResponse<>(200, "Success");
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
     }
-
 }

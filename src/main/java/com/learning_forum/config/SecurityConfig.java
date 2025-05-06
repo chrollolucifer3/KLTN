@@ -36,7 +36,10 @@ public class SecurityConfig {
             "/users",
             "/auth/login",
             "/auth/logout",
-            "/auth/refresh"
+            "/auth/refresh",
+            "/admin/login",
+            "/admin/logout",
+            "/admin/refresh",
     };
 
     /**
@@ -53,6 +56,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults()) // Sử dụng cấu hình CORS mặc định
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.POST, PUBLIC_URLS).permitAll() // Cho phép POST tới các URL public
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         .anyRequest().authenticated() // Các request còn lại cần xác thực
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(
@@ -68,7 +72,12 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
-
+    /**
+     * Cấu hình JwtAuthenticationConverter để chuyển đổi JWT thành Authentication.
+     * - Sử dụng JwtGrantedAuthoritiesConverter để lấy quyền từ JWT.
+     * - Không thêm tiền tố "ROLE_" vào các quyền lấy từ JWT.
+     * - Lấy quyền từ claim "role" trong JWT.
+     */
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
@@ -96,17 +105,4 @@ public class SecurityConfig {
 
         return authentication.getName(); // Lấy username trực tiếp
     }
-
-//    public String getCurrentUserRole() {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//
-//        if (authentication == null || !authentication.isAuthenticated()) {
-//            throw new AppException(ErrorCode.UNAUTHORIZED);
-//        }
-//
-//        return authentication.getAuthorities().stream()
-//                .findFirst() // Lấy role đầu tiên (vì mỗi user chỉ có 1 role)
-//                .map(GrantedAuthority::getAuthority) // Lấy tên quyền (VD: "ROLE_ADMIN")
-//                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
-//    }
 }

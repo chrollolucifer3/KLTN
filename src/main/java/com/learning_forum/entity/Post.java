@@ -4,6 +4,7 @@ import com.learning_forum.domain.STATUS;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -42,7 +43,7 @@ public class Post {
     @Column(nullable = false)
     STATUS status = STATUS.PENDING; // Mặc định là "chờ duyệt"
 
-    @Column(columnDefinition = "TEXT")
+    @JoinColumn(name = "reject_reason")
     String rejectReason; // Lý do từ chối (nếu có)
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -51,8 +52,8 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Document> documents;
 
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     LocalDateTime createdAt = LocalDateTime.now();
 
     LocalDateTime updatedAt = LocalDateTime.now();

@@ -9,8 +9,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserListResponse {
-    private List<UserResponseForAdmin> users;
+public class ListPostResponse {
+    private List<PostResponse> posts;
     private long total;
     private int totalPages;
     private int page;

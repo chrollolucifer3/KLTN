@@ -9,7 +9,6 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -46,11 +45,9 @@ public class UserCreationRequest {
     @Pattern(regexp = "^[^0-9]*$", message = "Tên không được chứa số")
     String fullName;
 
-    @NotNull
+    @NotNull(message = "Ngày sinh không được để trống") // Dùng @NotNull cho LocalDate
+    @Past(message = "Ngày sinh phải nhỏ hơn ngày hiện tại")
     LocalDate dob;
 
     Boolean isActive;
-    @Column(nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    LocalDateTime createdAt = LocalDateTime.now();
 }

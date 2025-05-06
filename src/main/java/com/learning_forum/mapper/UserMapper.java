@@ -13,7 +13,9 @@ import org.mapstruct.MappingTarget;
 public interface UserMapper {
 
     User toUser(UserCreationRequest request);
+
     void updateUser(@MappingTarget User user, UserUpdateRequest request);
+//    void updatePassword(@MappingTarget User user, UserUpdatePasswordRequest request);
 
     @Mapping(source = "role", target = "role")
     @Mapping(source = "isActive", target = "isActive")

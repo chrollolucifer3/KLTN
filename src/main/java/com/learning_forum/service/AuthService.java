@@ -1,15 +1,16 @@
 package com.learning_forum.service;
 
+import com.learning_forum.domain.USER_ROLE;
 import com.learning_forum.dto.request.AuthenticationRequest;
 import com.learning_forum.dto.request.LogoutRequest;
 import com.learning_forum.dto.request.RefreshRequest;
+import com.learning_forum.dto.request.UserUpdatePasswordRequest;
+import com.learning_forum.dto.respone.AuthAdminResponse;
 import com.learning_forum.dto.respone.AuthenticationResponse;
-import com.learning_forum.dto.respone.UserResponse;
 import com.learning_forum.entity.InvalidatedToken;
 import com.learning_forum.entity.User;
 import com.learning_forum.exception.AppException;
 import com.learning_forum.exception.ErrorCode;
-import com.learning_forum.mapper.UserMapper;
 import com.learning_forum.repository.InvalidatedTokenRepository;
 import com.learning_forum.repository.UserRepository;
 import com.nimbusds.jose.*;
@@ -22,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +31,8 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -53,13 +55,13 @@ public class AuthService {
     protected Long REFRESHABLE_DURATION;
 
     UserRepository userRepository;
-    UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     InvalidatedTokenRepository invalidatedTokenRepository;
 
-    // Login
+    // Login for user
     public AuthenticationResponse login(AuthenticationRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
+        log.info("Login with request: {}", request);
+        User user = userRepository.findByUsernameAndRole(request.getUsername(), USER_ROLE.USER)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (!user.getIsActive()) {
@@ -70,13 +72,32 @@ public class AuthService {
             throw new AppException(ErrorCode.INVALID_PASSWORD);
         }
 
-        UserResponse userResponse = userMapper.toUserResponseForUser(user);
         var token = generateToken(user);
-        return new AuthenticationResponse(token, userResponse);
+        return new AuthenticationResponse(token);
+    }
+
+    // Login for admin
+    public AuthAdminResponse loginAdmin(AuthenticationRequest request) {
+        log.info("Login with request: {}", request);
+        Optional<User> userOpt = userRepository.findByUsernameAndRole(request.getUsername(), USER_ROLE.ADMIN)
+                .or(() -> userRepository.findByUsernameAndRole(request.getUsername(), USER_ROLE.SUPER_ADMIN));
+
+        User user = userOpt.orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (!user.getIsActive()) {
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.INVALID_PASSWORD);
+        }
+        var token = generateToken(user);
+        return new AuthAdminResponse(token);
     }
 
     // Tạo token từ username của user (1 ngày hết hạn)
     private String generateToken(User user) {
+        log.info("Generating token for user: {}", user);
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
@@ -99,34 +120,33 @@ public class AuthService {
         }
     }
 
+    // Verify token
     public SignedJWT verifyToken(String token, boolean isRefresh)
             throws JOSEException, ParseException {
-//        System.out.println("Received token: " + token);
-
+        log.info("Verifying token: {}", token);
         JWSVerifier verifier = new MACVerifier(secret.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
 
-        boolean verified = signedJWT.verify(verifier);
+        Date expiryTime = (isRefresh)
+                ? new Date(signedJWT.getJWTClaimsSet().getIssueTime().toInstant()
+                    .plus(REFRESHABLE_DURATION, ChronoUnit.DAYS).toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
 
-        // Nếu không phải refresh token thì kiểm tra hạn sử dụng
-        if (!verified || (!isRefresh && signedJWT.getJWTClaimsSet().getExpirationTime().before(new Date()))) {
-            System.out.println("Token không hợp lệ hoặc đã hết hạn!");
+        var verify = signedJWT.verify(verifier);
+        if(!verify && expiryTime.after(new Date())) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        // Kiểm tra xem token có bị revoke không
-        String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
-        if (jwtId != null && invalidatedTokenRepository.existsById(jwtId)) {
+        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())){ // Kiểm tra token đã logout chưa
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
         return signedJWT;
     }
 
-
     //Logout
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
-
+        log.info("Logout request: {}", request);
         try {
             var signToken = verifyToken(request.getToken(), true);
             String jit = signToken.getJWTClaimsSet().getJWTID();
@@ -142,8 +162,10 @@ public class AuthService {
         }
     }
 
+    // Refresh token for user
     public AuthenticationResponse refreshToken(RefreshRequest request)
             throws ParseException, JOSEException {
+        log.info("Refreshing token: {}", request);
         System.out.println(request.getToken());
         var signedJWT = verifyToken(request.getToken() , true);
         var jit = signedJWT.getJWTClaimsSet().getJWTID();
@@ -159,10 +181,46 @@ public class AuthService {
         var username = signedJWT.getJWTClaimsSet().getSubject();
         var user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-//        System.out.println("User: " + user);
-        UserResponse userResponse = userMapper.toUserResponseForUser(user);
+
         var token = generateToken(user);
-//        System.out.println(token);
-        return new AuthenticationResponse(token, userResponse);
+        return new AuthenticationResponse(token);
+    }
+
+    // Refresh token for admin
+    public AuthAdminResponse refreshTokenAdmin(RefreshRequest request)
+            throws ParseException, JOSEException {
+        log.info("Refreshing token for Admin: {}", request);
+        var signedJWT = verifyToken(request.getToken() , true);
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken); // Lưu token cũ vào database
+
+        var username = signedJWT.getJWTClaimsSet().getSubject();
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        var token = generateToken(user);
+        return new AuthAdminResponse(token);
+    }
+
+    // Update password
+    public void updatePassword(String id, UserUpdatePasswordRequest request) {
+        log.info("Update password for user: {}", id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
+        }
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }

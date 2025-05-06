@@ -53,11 +53,13 @@ public class GlobalExceptionHandler {
                         (msg1, msg2) -> msg1 + "; " + msg2
                 )); // Chuyển thành Map (fieldName -> errorMessage)
 
-        ApiResponse<Object> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(HttpStatus.BAD_REQUEST.value());
-        apiResponse.setMessage("Validation failed");
-        apiResponse.setErrors(errorMap);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((
+                ApiResponse.builder()
+                        .code(HttpStatus.BAD_REQUEST.value())
+                        .message("Validation failed")
+                        .errors(errorMap)
+                        .build()
+                ));
     }
 
 

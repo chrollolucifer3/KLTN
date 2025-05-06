@@ -10,7 +10,6 @@ public enum ErrorCode {
     USER_NOT_FOUND(404, "Tài khoản không tồn tại", HttpStatus.NOT_FOUND ),
     USER_ALREADY_EXISTED(409, "Tài khoản đã tồn tại", HttpStatus.CONFLICT),
     USERNAME_INVALID(400, "Username is invalid", HttpStatus.BAD_REQUEST),
-    INVALID_PASSWORD(400, "Password is invalid", HttpStatus.BAD_REQUEST),
     USER_BLOCKED(403, "Tài khoản đã bị khóa" , HttpStatus.FORBIDDEN),
     USER_UNBLOCKED(403, "Tài khoản chưa bị khóa", HttpStatus.FORBIDDEN),
     SUPER_ADMIN_BLOCKED(403, "Bạn không thể khóa tài khoản này", HttpStatus.FORBIDDEN),
@@ -29,7 +28,17 @@ public enum ErrorCode {
     FILE_EMPTY(400, "Ảnh không được để trống", HttpStatus.BAD_REQUEST),
     INVALID_FILE_TYPE(400, "Định dạng file không hợp lệ", HttpStatus.BAD_REQUEST),
     FILE_TOO_LARGE(400, "Dung lượng file Không được vượt quá 5MB", HttpStatus.BAD_REQUEST),
-    INVALID_TOKEN(400, "Token không hợp lệ" , HttpStatus.BAD_REQUEST),;
+    INVALID_TOKEN(400, "Token không hợp lệ" , HttpStatus.BAD_REQUEST),
+    //PASSWORD
+    PASSWORD_NOT_MATCH(400, "Mật khẩu không khớp", HttpStatus.BAD_REQUEST),
+    INVALID_PASSWORD(400, "Mật khẩu không đúng", HttpStatus.BAD_REQUEST),
+
+    //Category
+    CATEGORY_NOT_FOUND(404, "Không tìm thấy danh mục", HttpStatus.NOT_FOUND),
+
+    //POST
+    POST_NOT_FOUND(404, "Không tìm thấy bài viết", HttpStatus.NOT_FOUND),
+    ;
     private final int code;
     private final String message;
     private HttpStatusCode statusCode;
