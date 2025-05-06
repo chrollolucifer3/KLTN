@@ -1,6 +1,5 @@
 package com.learning_forum.dto.request;
 
-import com.learning_forum.entity.Category;
 import com.learning_forum.entity.Post;
 import jakarta.persistence.JoinColumn;
 import jakarta.validation.constraints.NotBlank;

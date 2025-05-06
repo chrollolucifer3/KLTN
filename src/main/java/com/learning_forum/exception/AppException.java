@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 
-
 import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)

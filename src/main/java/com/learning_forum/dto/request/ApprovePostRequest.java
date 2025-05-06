@@ -1,7 +1,6 @@
 package com.learning_forum.dto.request;
 
 import com.learning_forum.domain.STATUS;
-import jakarta.persistence.Column;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
