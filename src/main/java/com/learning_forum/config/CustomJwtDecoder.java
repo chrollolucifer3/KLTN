@@ -1,8 +1,5 @@
 package com.learning_forum.config;
 
-
-import com.learning_forum.exception.AppException;
-import com.learning_forum.exception.ErrorCode;
 import com.learning_forum.service.AuthService;
 import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;

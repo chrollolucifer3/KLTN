@@ -57,4 +57,7 @@ public class Post {
     LocalDateTime createdAt = LocalDateTime.now();
 
     LocalDateTime updatedAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<PostLike> likes;
 }

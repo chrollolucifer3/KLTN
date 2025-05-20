@@ -3,6 +3,7 @@ package com.learning_forum.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -31,12 +32,9 @@ public class Comment {
     @Column(nullable = false, columnDefinition = "TEXT")
     String content;
 
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     LocalDateTime createdAt = LocalDateTime.now();
 
     LocalDateTime updatedAt = LocalDateTime.now();
-
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<CommentReply> replies;
 }

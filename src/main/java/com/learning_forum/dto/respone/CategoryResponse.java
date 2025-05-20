@@ -1,6 +1,5 @@
 package com.learning_forum.dto.respone;
 
-import com.learning_forum.entity.Post;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,7 +14,7 @@ import java.util.Set;
 public class CategoryResponse {
     String id;
     String name;
-    String parentId; // chỉ giữ id, không giữ object cha
-    Set<Post> posts;
+    String parentId;
+    Set<PostFromCategoryResponse> posts;
     List<CategoryResponse> subCategories;
 }

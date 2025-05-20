@@ -31,7 +31,6 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -123,7 +122,7 @@ public class AuthService {
     // Verify token
     public SignedJWT verifyToken(String token, boolean isRefresh)
             throws JOSEException, ParseException {
-        log.info("Verifying token: {}", token);
+        log.info("Verifying token");
         JWSVerifier verifier = new MACVerifier(secret.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
 

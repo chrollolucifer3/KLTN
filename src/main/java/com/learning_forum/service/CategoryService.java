@@ -3,6 +3,7 @@ package com.learning_forum.service;
 import com.learning_forum.dto.request.CategoryCreateOrUpdateRequest;
 import com.learning_forum.dto.respone.CategoryParentResponse;
 import com.learning_forum.dto.respone.CategoryResponse;
+import com.learning_forum.dto.respone.HomeClientResponse;
 import com.learning_forum.entity.Category;
 import com.learning_forum.exception.AppException;
 import com.learning_forum.exception.ErrorCode;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -65,5 +67,18 @@ public class CategoryService {
         return subCategories.stream()
                 .map(categoryMapper::toCategoryParentResponse)
                 .toList();
+    }
+
+    // Get all categories and sub categories and their posts
+    public List<HomeClientResponse> getAllCategoriesAndSubCategories() {
+        log.info("Get all categories and sub categories and their posts");
+
+        // Lấy tất cả danh mục cha (parentCategory == null)
+        List<Category> parentCategories = categoryRepository.findByParentCategoryIsNull();
+
+        // Dùng mapper để đệ quy lấy tất cả subCategory và bài viết
+        return parentCategories.stream()
+                .map(categoryMapper::toHomeClientResponseRecursive)
+                .collect(Collectors.toList());
     }
 }

@@ -2,6 +2,8 @@ package com.learning_forum.mapper;
 
 
 import com.learning_forum.dto.request.PostRequest;
+import com.learning_forum.dto.respone.ListPostResponse;
+import com.learning_forum.dto.respone.PostFromCategoryResponse;
 import com.learning_forum.dto.respone.PostResponse;
 import com.learning_forum.entity.Category;
 import com.learning_forum.entity.Post;
@@ -35,6 +37,17 @@ public interface PostMapper {
             @Mapping(target = "userId", source = "user.id"),
             @Mapping(target = "categoryId", source = "category.id"),
             @Mapping(target = "authorName", source = "user.fullName"),
+            @Mapping(target = "categoryName", source = "category.name"),
     })
     PostResponse toPostResponse(Post post);
+
+    @Mappings(value = {
+            @Mapping(target = "userId", source = "user.id"),
+            @Mapping(target = "categoryId", source = "category.id"),
+            @Mapping(target = "authorName", source = "user.fullName"),
+            @Mapping(target = "categoryName", source = "category.name"),
+    })
+    PostResponse toPostResponseForAdmin(Post post);
+
+    PostFromCategoryResponse toPostFromCategoryResponse(Post post);
 }

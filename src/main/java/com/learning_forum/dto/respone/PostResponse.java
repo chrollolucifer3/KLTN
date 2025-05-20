@@ -19,4 +19,7 @@ public class PostResponse {
     String createdAt;
     String updatedAt;
     String authorName;
+    String categoryName;
+    boolean isLiked;
+    int likeCount;
 }

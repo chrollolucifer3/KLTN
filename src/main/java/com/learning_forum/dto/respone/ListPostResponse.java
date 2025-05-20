@@ -10,7 +10,8 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class ListPostResponse {
-    private List<PostResponse> posts;
+    private String categoryName;
+    private List<PostFromCategoryResponse> posts;
     private long total;
     private int totalPages;
     private int page;
