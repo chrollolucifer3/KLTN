@@ -8,7 +8,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class LikePostRequest {
-    String userId;
-    String postId;
+public class UpdateCommentRequest {
+    String content;// Optional, if it's a reply to another comment
 }

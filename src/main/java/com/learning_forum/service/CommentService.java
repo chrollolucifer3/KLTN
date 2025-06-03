@@ -1,6 +1,8 @@
 package com.learning_forum.service;
 
 import com.learning_forum.dto.request.CommentRequest;
+import com.learning_forum.dto.request.DeleteCommentRequest;
+import com.learning_forum.dto.request.UpdateCommentRequest;
 import com.learning_forum.dto.respone.CommentResponse;
 import com.learning_forum.dto.respone.ListCommentResponse;
 import com.learning_forum.entity.Comment;
@@ -65,5 +67,20 @@ public class CommentService {
                 .page(page)
                 .size(size)
                 .build();
+    }
+
+    // Delete comment by id
+    public void deleteComment(DeleteCommentRequest request) {
+        Comment comment = commentRepository.findById(request.getCommentId())
+                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+        commentRepository.delete(comment);
+    }
+
+    // Update comment
+    public void updateComment(String id, UpdateCommentRequest request) {
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+        commentMapper.updateComment(comment, request);
+        commentRepository.save(comment);
     }
 }

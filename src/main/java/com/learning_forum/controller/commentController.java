@@ -2,6 +2,8 @@ package com.learning_forum.controller;
 
 import com.learning_forum.dto.request.ApiResponse;
 import com.learning_forum.dto.request.CommentRequest;
+import com.learning_forum.dto.request.DeleteCommentRequest;
+import com.learning_forum.dto.request.UpdateCommentRequest;
 import com.learning_forum.dto.respone.CommentResponse;
 import com.learning_forum.dto.respone.ListCommentResponse;
 import com.learning_forum.service.CommentService;
@@ -45,6 +47,28 @@ public class commentController {
                 .code(200)
                 .message("Success")
                 .result(commentService.getListCommentByPostId(id, page, size, sortBy, order))
+                .build();
+    }
+
+    // Delete comment
+    @PostMapping("/delete")
+    public ApiResponse<?> deleteComment(@RequestBody DeleteCommentRequest request) {
+        log.info("CommentController.DeleteComment with: {}", request);
+        commentService.deleteComment(request);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
+    }
+
+    // Update comment
+    @PostMapping("/update/{id}")
+    public ApiResponse<?> updateComment(@PathVariable String id, @RequestBody UpdateCommentRequest request) {
+        log.info("CommentController.UpdateComment with id: {}, request: {}", id, request);
+        commentService.updateComment(id, request);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
                 .build();
     }
 }

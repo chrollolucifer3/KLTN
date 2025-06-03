@@ -36,8 +36,12 @@ public enum ErrorCode {
     //Category
     CATEGORY_NOT_FOUND(404, "Không tìm thấy danh mục", HttpStatus.NOT_FOUND),
 
+    //COMMENT
+    COMMENT_NOT_FOUND(404, "Không tìm thấy bình luận", HttpStatus.NOT_FOUND),
     //POST
     POST_NOT_FOUND(404, "Không tìm thấy bài viết", HttpStatus.NOT_FOUND),
+    //Report
+    REPORT_NOT_FOUND(404, "Không tìm thấy báo cáo", HttpStatus.NOT_FOUND),
     ;
     private final int code;
     private final String message;

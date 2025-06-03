@@ -2,7 +2,6 @@ package com.learning_forum.mapper;
 
 
 import com.learning_forum.dto.request.PostRequest;
-import com.learning_forum.dto.respone.ListPostResponse;
 import com.learning_forum.dto.respone.PostFromCategoryResponse;
 import com.learning_forum.dto.respone.PostResponse;
 import com.learning_forum.entity.Category;

@@ -1,13 +1,14 @@
 package com.learning_forum.mapper;
 
 import com.learning_forum.dto.request.CommentRequest;
+import com.learning_forum.dto.request.UpdateCommentRequest;
 import com.learning_forum.dto.respone.CommentResponse;
-import com.learning_forum.dto.respone.ListCommentResponse;
 import com.learning_forum.entity.Comment;
 import com.learning_forum.entity.Post;
 import com.learning_forum.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Mappings;
 
 @Mapper(componentModel = "spring")
@@ -36,4 +37,6 @@ public interface CommentMapper {
             @Mapping(target = "postId", source = "post.id"),
     })
     CommentResponse toCommentResponse(Comment comment);
+
+    void updateComment(@MappingTarget Comment comment, UpdateCommentRequest request);
 }

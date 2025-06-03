@@ -8,7 +8,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class LikePostRequest {
-    String userId;
-    String postId;
+public class DeleteCommentRequest {
+    String commentId;
 }

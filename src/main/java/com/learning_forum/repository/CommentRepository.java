@@ -10,4 +10,5 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, String>, JpaSpecificationExecutor<Comment> {
     Page<Comment> findByPostId(String postId, Pageable pageable);
+    Optional<Comment> findCommentById(String id);
 }

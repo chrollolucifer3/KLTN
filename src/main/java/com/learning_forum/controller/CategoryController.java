@@ -89,5 +89,4 @@ public class CategoryController {
                 .result(categoryService.getAllCategoriesAndSubCategories())
                 .build();
     }
-
 }

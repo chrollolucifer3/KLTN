@@ -43,7 +43,7 @@ public class PostService {
     PostRepository postRepository;
     SecurityConfig securityConfig;
     UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
+    CategoryRepository categoryRepository;
 
     //Create post
     public PostResponse createPost(PostRequest request) {
@@ -128,7 +128,7 @@ public class PostService {
         Sort.Direction direction = Sort.Direction.fromString(order);
         Pageable pageable = PageRequest.of(pageIndex, size, Sort.by(direction, sortBy));
 
-        Page<Post> posts = postRepository.findAllByCategoryId(id, pageable);
+        Page<Post> posts = postRepository.findAllByCategoryIdAndStatus(id, STATUS.APPROVED, pageable);
 
         List<PostFromCategoryResponse> postResponseList = posts.getContent()
                 .stream()
@@ -178,7 +178,7 @@ public class PostService {
     // Lấy 5 bài viết mới nhất
     public List<PostResponse> getPost() {
         log.info("Get latest posts");
-        List<Post> posts = postRepository.findTop5ByOrderByCreatedAtDesc();
+        List<Post> posts = postRepository.findTop5ByStatusOrderByCreatedAtDesc(STATUS.APPROVED);
         return posts.stream()
                 .map(postMapper::toPostResponse)
                 .collect(Collectors.toList());

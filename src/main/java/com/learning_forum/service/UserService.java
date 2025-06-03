@@ -1,6 +1,7 @@
 package com.learning_forum.service;
 
 import com.learning_forum.config.SecurityConfig;
+import com.learning_forum.domain.STATUS;
 import com.learning_forum.domain.USER_ROLE;
 
 import com.learning_forum.dto.request.UserCreationRequest;
@@ -9,10 +10,12 @@ import com.learning_forum.dto.request.UserUpdateRequest;
 import com.learning_forum.dto.respone.UserListResponse;
 import com.learning_forum.dto.respone.UserResponse;
 import com.learning_forum.dto.respone.UserResponseForAdmin;
+import com.learning_forum.entity.Post;
 import com.learning_forum.entity.User;
 import com.learning_forum.exception.AppException;
 import com.learning_forum.exception.ErrorCode;
 import com.learning_forum.mapper.UserMapper;
+import com.learning_forum.repository.PostRepository;
 import com.learning_forum.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +48,7 @@ public class UserService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     SecurityConfig securityConfig;
+    PostRepository postRepository;
 
     // Create user
     public UserResponse createUser(UserCreationRequest request) {
@@ -191,6 +195,12 @@ public class UserService {
 
         user.setActive(false);
         userRepository.save(user);
+
+        List<Post> posts = postRepository.findAllByUserId(user.getId());
+        for (Post post : posts) {
+            post.setStatus(STATUS.BLOCKED);
+        }
+        postRepository.saveAll(posts);
         log.info("User {} is blocked", user.getUsername());
     }
 
@@ -217,6 +227,13 @@ public class UserService {
 
         user.setActive(true);
         userRepository.save(user);
+
+        List<Post> posts = postRepository.findAllByUserId(user.getId());
+        for (Post post : posts) {
+            if (post.getStatus() == STATUS.BLOCKED) {
+                post.setStatus(STATUS.APPROVED); // Hoặc trạng thái khác phù hợp
+            }
+        }
         log.info("User {} is unblocked", user.getUsername());
     }
 

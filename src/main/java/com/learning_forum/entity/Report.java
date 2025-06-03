@@ -4,6 +4,7 @@ import com.learning_forum.domain.STATUS;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -21,24 +22,25 @@ public class Report {
     String id;
 
     @ManyToOne
-    @JoinColumn(name = "reporter_id", nullable = false)
-    User reporter; // Người báo cáo
+    @JoinColumn(name = "user_id", nullable = false)
+    User user; // Người báo cáo
 
     @ManyToOne
-    @JoinColumn(name = "reported_post_id")
-    Post reportedPost; // Báo cáo bài viết hoặc bình luận
+    @JoinColumn(name = "post_id")
+    Post post; // Báo cáo bài viết hoặc bình luận
 
     @ManyToOne
-    @JoinColumn(name = "reported_comment_id")
-    Comment reportedComment; // Báo cáo bài viết hoặc bình luận
+    @JoinColumn(name = "comment_id")
+    Comment comment; // Báo cáo bài viết hoặc bình luận
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false)
     String reason; // Lý do báo cáo
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     STATUS status = STATUS.PENDING;
 
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
     LocalDateTime createdAt = LocalDateTime.now();
 }
