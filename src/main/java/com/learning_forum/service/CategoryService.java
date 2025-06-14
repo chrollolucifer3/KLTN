@@ -4,6 +4,7 @@ import com.learning_forum.dto.request.CategoryCreateOrUpdateRequest;
 import com.learning_forum.dto.respone.CategoryParentResponse;
 import com.learning_forum.dto.respone.CategoryResponse;
 import com.learning_forum.dto.respone.HomeClientResponse;
+import com.learning_forum.dto.respone.ListCategoryResponse;
 import com.learning_forum.entity.Category;
 import com.learning_forum.exception.AppException;
 import com.learning_forum.exception.ErrorCode;
@@ -80,5 +81,35 @@ public class CategoryService {
         return parentCategories.stream()
                 .map(categoryMapper::toHomeClientResponseRecursive)
                 .collect(Collectors.toList());
+    }
+
+    // Get all categories
+    public List<ListCategoryResponse> getAllCategories() {
+        log.info("Get all categories");
+        List<Category> categories = categoryRepository.findAll();
+        return categories.stream()
+                .map(categoryMapper::toListCategoryResponse)
+                .collect(Collectors.toList());
+    }
+
+    // update category
+    public void updateCategory(String id, CategoryCreateOrUpdateRequest request) {
+        log.info("Update category with id: {} and request: {}", id, request);
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        // Cập nhật thông tin từ request
+        category.setName(request.getName());
+
+        // Nếu có parentId thì cập nhật parentCategory
+        if (request.getParentId() != null) {
+            Category parentCategory = categoryRepository.findById(request.getParentId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+            category.setParentCategory(parentCategory);
+        } else {
+            category.setParentCategory(null); // nếu không có parentId thì đặt là null
+        }
+        // Lưu lại category đã cập nhật
+        categoryRepository.save(category);
     }
 }

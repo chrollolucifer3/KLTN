@@ -71,4 +71,16 @@ public class commentController {
                 .message("Success")
                 .build();
     }
+
+    //Lấy số lượng comment trong tháng hiện tại
+    @GetMapping("/count")
+    public ApiResponse<Integer> countCommentsInCurrentMonth() {
+        log.info("CommentController.countCommentsInCurrentMonth");
+        int count = commentService.countCommentsInCurrentMonth();
+        return ApiResponse.<Integer>builder()
+                .code(200)
+                .message("Success")
+                .result(count)
+                .build();
+    }
 }

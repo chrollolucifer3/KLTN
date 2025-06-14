@@ -11,6 +11,4 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ApprovePostRequest {
     String id;
-    String categoryId;
-    STATUS status = STATUS.APPROVED;
 }

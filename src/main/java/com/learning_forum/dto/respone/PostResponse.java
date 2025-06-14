@@ -22,5 +22,5 @@ public class PostResponse {
     String authorName;
     String categoryName;
     boolean isLiked;
-    int likeCount;
+    int likesCount;
 }

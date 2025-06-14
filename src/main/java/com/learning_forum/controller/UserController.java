@@ -103,4 +103,15 @@ public class UserController {
                 .message("Success")
                 .build();
     }
+
+    //Lấy số lượng users mới trong tháng hiện tại
+    @GetMapping("newUsersCount")
+    ApiResponse<Integer> getNewUsersCount() {
+        int count = userService.getNewUsersCountThisMonth();
+        return ApiResponse.<Integer>builder()
+                .code(200)
+                .message("Success")
+                .result(count)
+                .build();
+    }
 }

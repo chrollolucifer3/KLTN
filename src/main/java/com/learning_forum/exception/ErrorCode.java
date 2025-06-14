@@ -42,6 +42,8 @@ public enum ErrorCode {
     POST_NOT_FOUND(404, "Không tìm thấy bài viết", HttpStatus.NOT_FOUND),
     //Report
     REPORT_NOT_FOUND(404, "Không tìm thấy báo cáo", HttpStatus.NOT_FOUND),
+    //Document
+    DOCUMENT_NOT_FOUND(404, "Không tìm thấy tài liệu", HttpStatus.NOT_FOUND),
     ;
     private final int code;
     private final String message;

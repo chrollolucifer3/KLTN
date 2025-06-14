@@ -5,10 +5,8 @@ import com.learning_forum.domain.STATUS;
 import com.learning_forum.dto.request.ApprovePostRequest;
 import com.learning_forum.dto.request.PostRequest;
 import com.learning_forum.dto.request.RejectPostRequest;
-import com.learning_forum.dto.respone.ListPostResponse;
-import com.learning_forum.dto.respone.ListPostResponseForAdmin;
-import com.learning_forum.dto.respone.PostFromCategoryResponse;
-import com.learning_forum.dto.respone.PostResponse;
+import com.learning_forum.dto.request.TimeRangeRequest;
+import com.learning_forum.dto.respone.*;
 import com.learning_forum.entity.Category;
 import com.learning_forum.entity.Post;
 import com.learning_forum.entity.User;
@@ -30,6 +28,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -170,7 +172,7 @@ public class PostService {
 
         PostResponse response = postMapper.toPostResponse(post);
         response.setLiked(isLiked);
-        response.setLikeCount(post.getLikesCount());
+        response.setLikesCount(post.getLikesCount());
 
         return response;
     }
@@ -183,4 +185,50 @@ public class PostService {
                 .map(postMapper::toPostResponse)
                 .collect(Collectors.toList());
     }
+
+    public ListFivePostResponse getFivePostMostLiked() {
+        log.info("Get top 5 most liked posts overall");
+        Pageable topFive = PageRequest.of(0, 5);
+
+        List<Post> posts = postRepository.findTop5PostByLikesCount(STATUS.APPROVED.name());
+
+        List<PostResponse> postResponses = posts.stream()
+                .map(postMapper::toPostResponse)
+                .toList();
+
+        return new ListFivePostResponse(postResponses);
+    }
+
+    // Lấy số lượng bài viết mới trong tháng hiện tại
+    public int getCountPostsThisMonth() {
+        log.info("Get new posts count in current month");
+        LocalDate now = LocalDate.now();
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endOfMonth = now.withDayOfMonth(now.lengthOfMonth()).atTime(23, 59, 59);
+        return postRepository.countByCreatedAtAfterAndStatus(startOfMonth, endOfMonth, STATUS.APPROVED);
+    }
+
+    public List<CountPostsByTimeResponse> getCountPostsByTime(TimeRangeRequest request) {
+        log.info("PostService.GetCountPostsByTime with request: {}", request);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd"); // Khớp với FE gửi lên
+
+        // Parse startDate, endDate từ String → LocalDate → LocalDateTime
+        LocalDate startDate = LocalDate.parse(request.getStartDate(), formatter);
+        LocalDate endDate = LocalDate.parse(request.getEndDate(), formatter);
+
+        // Đổi sang LocalDateTime để truy vấn chính xác theo ngày giờ
+        LocalDateTime startDateTime = startDate.atStartOfDay(); // 00:00:00
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX); // 23:59:59.999999999
+
+        List<Object[]> results = postRepository.countPostsByTimeRange(startDateTime, endDateTime);
+
+        return results.stream()
+                .map(result -> new CountPostsByTimeResponse(
+                        String.valueOf(result[0]),  // Chuyển result[0] sang String
+                        ((Number) result[1]).intValue()
+                ))
+                .collect(Collectors.toList());
+    }
+
 }

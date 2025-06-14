@@ -22,6 +22,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -82,5 +84,14 @@ public class CommentService {
                 .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
         commentMapper.updateComment(comment, request);
         commentRepository.save(comment);
+    }
+
+    //Lấy số lượng bình luận trong tháng này
+    public int countCommentsInCurrentMonth() {
+        log.info("Counting comments in the current month");
+        LocalDate now = LocalDate.now();
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endOfMonth = now.withDayOfMonth(now.lengthOfMonth()).atTime(23, 59, 59);
+        return commentRepository.countCommentsInCurrentMonth(startOfMonth, endOfMonth);
     }
 }

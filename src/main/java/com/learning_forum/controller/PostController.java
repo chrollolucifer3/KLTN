@@ -1,6 +1,8 @@
 package com.learning_forum.controller;
 
 import com.learning_forum.dto.request.*;
+import com.learning_forum.dto.respone.CountPostsByTimeResponse;
+import com.learning_forum.dto.respone.ListFivePostResponse;
 import com.learning_forum.dto.respone.ListPostResponse;
 import com.learning_forum.dto.respone.ListPostResponseForAdmin;
 import com.learning_forum.service.PostLikeService;
@@ -11,6 +13,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -120,4 +124,38 @@ public class PostController {
                 .result(postService.getPost())
                 .build();
     }
+
+    @GetMapping("/get/top-liked-month")
+    ApiResponse<ListFivePostResponse> getFivePostMostLikedInMonth() {
+        log.info("PostController.GetFivePostMostLikedInMonth");
+        return ApiResponse.<ListFivePostResponse>builder()
+                .code(200)
+                .message("Success")
+                .result(postService.getFivePostMostLiked())
+                .build();
+    }
+
+    //Lấy số lượng bài viết mới trong tháng hiện tại
+    @GetMapping("/get/count-posts-this-month")
+    ApiResponse<Integer> getCountPostsThisMonth() {
+        log.info("PostController.GetCountPostsThisMonth");
+        return ApiResponse.<Integer>builder()
+                .code(200)
+                .message("Success")
+                .result(postService.getCountPostsThisMonth())
+                .build();
+    }
+
+    //Lấy số lượng bài viết mới theo khoảng thời gian truyền về
+    @PostMapping("/get/count-posts-by-time")
+    ApiResponse<List<CountPostsByTimeResponse>> getCountPostsByTime(@RequestBody TimeRangeRequest request) {
+        log.info("PostController.GetCountPostsByTime with request: {}", request);
+        return ApiResponse.<List<CountPostsByTimeResponse>>builder()
+                .code(200)
+                .message("Success")
+                .result(postService.getCountPostsByTime(request))
+                .build();
+    }
+
+
 }

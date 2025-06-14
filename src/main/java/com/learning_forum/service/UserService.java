@@ -35,6 +35,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 
@@ -308,5 +310,16 @@ public class UserService {
             log.error("Error uploading file", e);
             throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
         }
+    }
+
+    //Lấy số lượng người dùng mới trong tháng hiện tại
+    public int getNewUsersCountThisMonth() {
+        log.info("UserService: Getting new users count for this month");
+
+        LocalDate now = LocalDate.now();
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endOfMonth = now.withDayOfMonth(now.lengthOfMonth()).atTime(23, 59, 59);
+
+        return userRepository.countNewUser(startOfMonth, endOfMonth);
     }
 }

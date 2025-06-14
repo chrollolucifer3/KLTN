@@ -1,8 +1,10 @@
 package com.learning_forum.entity;
 
+import com.learning_forum.domain.STATUS;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -30,9 +32,17 @@ public class Document {
     @Column(nullable = false)
     private String fileName;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    STATUS status = STATUS.PENDING; // Mặc định là "chờ duyệt"
+
+    @JoinColumn(name = "reject_reason")
+    String rejectReason; // Lý do từ chối (nếu có)
+
     @Column(nullable = false)
     private String fileUrl;
 
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime uploadedAt = LocalDateTime.now();
+    LocalDateTime createdAt = LocalDateTime.now();
 }

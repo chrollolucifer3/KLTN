@@ -60,6 +60,12 @@
 			<artifactId>mapstruct</artifactId>
 			<version>1.5.5.Final</version>
 		</dependency>
+		<!-- MapStruct commons-io -->
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.14.0</version>
+		</dependency>
 
 		<!-- MapStruct Processor (Dùng để generate code) -->
 		<dependency>

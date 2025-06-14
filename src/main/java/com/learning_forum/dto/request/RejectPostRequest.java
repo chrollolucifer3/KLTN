@@ -11,6 +11,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RejectPostRequest {
     String id;
-    STATUS status = STATUS.REJECTED;
     String rejectReason;
 }

@@ -5,6 +5,7 @@ import com.learning_forum.dto.request.CategoryCreateOrUpdateRequest;
 import com.learning_forum.dto.respone.CategoryParentResponse;
 import com.learning_forum.dto.respone.CategoryResponse;
 import com.learning_forum.dto.respone.HomeClientResponse;
+import com.learning_forum.dto.respone.ListCategoryResponse;
 import com.learning_forum.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -57,9 +58,9 @@ public class CategoryController {
                 .build();
     }
 
-    // Get all categories
+    // Get all categories parents
     @GetMapping
-    public ApiResponse<List<CategoryParentResponse>> getAllCategories() {
+    public ApiResponse<List<CategoryParentResponse>> getAllCategoriesParent() {
         log.info("CategoryController.GetAllCategories");
         return ApiResponse.<List<CategoryParentResponse>>builder()
                 .code(200)
@@ -89,4 +90,27 @@ public class CategoryController {
                 .result(categoryService.getAllCategoriesAndSubCategories())
                 .build();
     }
+
+    // get all categories
+    @GetMapping("/getAll")
+    public ApiResponse<List<ListCategoryResponse>> getAllCategories() {
+        log.info("CategoryController.GetAllCategories");
+        return ApiResponse.<List<ListCategoryResponse>>builder()
+                .code(200)
+                .message("Success")
+                .result(categoryService.getAllCategories())
+                .build();
+    }
+
+    // sửa category
+    @PostMapping("/update/{id}")
+    public ApiResponse<?> updateCategory(@PathVariable String id, @RequestBody @Valid CategoryCreateOrUpdateRequest request) {
+        log.info("CategoryController.UpdateCategory with id: {}, request: {}", id, request);
+        categoryService.updateCategory(id, request);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
+    }
 }
+

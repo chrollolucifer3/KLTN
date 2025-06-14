@@ -105,12 +105,13 @@ public class ReportService {
         log.info("Delete post or comment by: {}", request);
         if (request.getPostId() != null && request.getCommentId() == null) {
             // Khoa bài viết theo ID
-            Post post = postRepository.findPostById(request.getPostId())
+            postRepository.findPostById(request.getPostId())
                     .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
-            post.setStatus(STATUS.BLOCKED);
-            postRepository.save(post);
+            postRepository.deleteById(request.getPostId());
         } else if (request.getCommentId() != null && request.getPostId() == null) {
             // Xoá bình luận theo ID
+            commentRepository.findCommentById(request.getCommentId())
+                    .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
             commentRepository.deleteById(request.getCommentId());
         } else {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);

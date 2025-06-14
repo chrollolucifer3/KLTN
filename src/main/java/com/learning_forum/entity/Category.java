@@ -1,5 +1,6 @@
 package com.learning_forum.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -28,9 +29,11 @@ public class Category {
 
     // Danh sách danh mục con
     @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     Set<Category> subCategories;
 
     // Danh sách bài viết thuộc danh mục
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    @JsonIgnore
     Set<Post> posts;
 }

@@ -18,5 +18,5 @@ public class CategoryCreateOrUpdateRequest {
     String name;
     @JoinColumn(name = "parent_id")
     String parentId;
-    Set<Post> posts;
 }
+

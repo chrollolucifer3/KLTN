@@ -1,13 +1,12 @@
 package com.learning_forum.mapper;
 
 import com.learning_forum.dto.request.CategoryCreateOrUpdateRequest;
-import com.learning_forum.dto.respone.CategoryParentResponse;
-import com.learning_forum.dto.respone.CategoryResponse;
-import com.learning_forum.dto.respone.HomeClientResponse;
-import com.learning_forum.dto.respone.PostFromCategoryResponse;
+import com.learning_forum.dto.respone.*;
 import com.learning_forum.entity.Category;
 import com.learning_forum.entity.Post;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -69,6 +68,25 @@ public interface CategoryMapper {
                 .build();
     }
 
-    CategoryParentResponse toCategoryParentResponse(Category category);
+//    CategoryParentResponse toCategoryParentResponse(Category category);
     PostFromCategoryResponse toPostFromCategoryResponse(Post post);
+
+    /**
+     * Map từ Category → ListCategoryResponse (2 mức, có parentCategory)
+     */
+    @Mapping(target = "parentCategory", source = "parentCategory", qualifiedByName = "toCategoryParentResponse")
+    ListCategoryResponse toListCategoryResponse(Category category);
+
+    /**
+     * Map Category → CategoryParentResponse (id + name)
+     */
+    @Named("toCategoryParentResponse")
+    default CategoryParentResponse toCategoryParentResponse(Category category) {
+        if (category == null) return null;
+        return CategoryParentResponse.builder()
+                .id(category.getId())
+                .name(category.getName())
+                .build();
+    }
+
 }
