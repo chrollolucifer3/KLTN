@@ -21,4 +21,17 @@ public interface DocumentRepository extends JpaRepository<Document, String>, Jpa
             @Param("end") LocalDateTime end,
             @Param("status") STATUS status
     );
+
+    @Query("""
+    SELECT d FROM Document d
+    WHERE d.user.id = :userId
+      AND d.status = :status
+      AND (:search IS NULL OR LOWER(d.fileName) LIKE LOWER(CONCAT('%', :search, '%')))
+""")
+    Page<Document> findByUserAndStatusAndSearch(
+            @Param("userId") String userId,
+            @Param("status") STATUS status,
+            @Param("search") String search,
+            Pageable pageable
+    );
 }

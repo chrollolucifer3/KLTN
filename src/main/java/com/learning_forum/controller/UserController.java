@@ -43,12 +43,13 @@ public class UserController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "ASC") String order,
-            @RequestParam(required = false) String search
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean isActive
     ) {
         return ApiResponse.<UserListResponse>builder()
                 .code(200)
                 .message("Success")
-                .result(userService.getAllUsers(page, size, sortBy, order, search))
+                .result(userService.getAllUsers(page, size, sortBy, order, search, isActive))
                 .build();
     }
 
@@ -112,6 +113,53 @@ public class UserController {
                 .code(200)
                 .message("Success")
                 .result(count)
+                .build();
+    }
+
+    // follow user
+    @PostMapping("follow/{userId}")
+    ApiResponse<?> followUser(@PathVariable String userId) {
+        userService.followUser(userId);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
+    }
+
+    // unfollow user
+    @PostMapping("unfollow/{userId}")
+    ApiResponse<?> unfollowUser(@PathVariable String userId) {
+        userService.unfollowUser(userId);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
+    }
+
+    //get user by id
+    @GetMapping("/author/{userId}")
+    public ApiResponse<UserResponseForAdmin> getUserById(@PathVariable String userId) {
+        UserResponseForAdmin user = userService.getUserById(userId);
+        return ApiResponse.<UserResponseForAdmin>builder()
+                .code(200)
+                .message("Success")
+                .result(user)
+                .build();
+    }
+
+    // lấy danh sách người dùng đã theo dõi
+    @GetMapping("following")
+    public ApiResponse<UserListResponse> getFollowingUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "ASC") String order
+    ) {
+        UserListResponse response = userService.getFollowingUsers(page, size, sortBy, order);
+        return ApiResponse.<UserListResponse>builder()
+                .code(200)
+                .message("Success")
+                .result(response)
                 .build();
     }
 }

@@ -16,14 +16,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PostLikeService {
+
     PostLikeRepository postLikeRepository;
     PostRepository postRepository;
     UserRepository userRepository;
+    NotificationService notificationService;
 
     @Transactional
     public boolean toggleLikePost(LikePostRequest request) {
@@ -42,6 +46,10 @@ public class PostLikeService {
             postLikeRepository.save(PostLike.builder().user(user).post(post).build());
             post.setLikesCount(post.getLikesCount() + 1);
             postRepository.save(post);
+            // Nếu người dùng thích bài viết không phải là tác giả của bài viết, gửi thông báo
+            if (!Objects.equals(user.getId(), post.getUser().getId())) {
+                notificationService.notifyAuthorPostLiked(post.getId(), user.getId());
+            }
             return true;
         }
     }

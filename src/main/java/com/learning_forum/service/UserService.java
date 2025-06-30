@@ -4,19 +4,23 @@ import com.learning_forum.config.SecurityConfig;
 import com.learning_forum.domain.STATUS;
 import com.learning_forum.domain.USER_ROLE;
 
+import com.learning_forum.dto.projection.UserFollowerProjection;
 import com.learning_forum.dto.request.UserCreationRequest;
 import com.learning_forum.dto.request.UserUpdateRequest;
 
 import com.learning_forum.dto.respone.UserListResponse;
 import com.learning_forum.dto.respone.UserResponse;
 import com.learning_forum.dto.respone.UserResponseForAdmin;
+import com.learning_forum.entity.Follow;
 import com.learning_forum.entity.Post;
 import com.learning_forum.entity.User;
 import com.learning_forum.exception.AppException;
 import com.learning_forum.exception.ErrorCode;
 import com.learning_forum.mapper.UserMapper;
+import com.learning_forum.repository.FollowRepository;
 import com.learning_forum.repository.PostRepository;
 import com.learning_forum.repository.UserRepository;
+import jakarta.persistence.criteria.Predicate;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -51,6 +55,7 @@ public class UserService {
     PasswordEncoder passwordEncoder;
     SecurityConfig securityConfig;
     PostRepository postRepository;
+    FollowRepository followRepository;
 
     // Create user
     public UserResponse createUser(UserCreationRequest request) {
@@ -89,45 +94,56 @@ public class UserService {
     }
 
     // Get all users
-    public UserListResponse getAllUsers(int page, int size, String sortBy, String order, String search) {
-        log.info("UserService: Getting all users with page: {}, size: {}, sortBy: {}, order: {}, search: {}", page, size, sortBy, order, search);
-        //  Đảm bảo page không bị âm (Spring Boot đánh số trang từ 0)
-        int pageIndex = Math.max(page - 1, 0);
+    public UserListResponse getAllUsers(int page, int size, String sortBy, String order, String search, Boolean isActive) {
+        log.info("Getting users: page={}, size={}, sortBy={}, order={}, search={}, isActive={}",
+                page, size, sortBy, order, search, isActive);
 
-        //  Tạo Pageable với sắp xếp giảm dần (descending)
-        Sort.Direction direction = Sort.Direction.fromString(order);
+        int pageIndex = Math.max(page - 1, 0);
+        Sort.Direction direction = Sort.Direction.fromString(order.toUpperCase());
+
         Pageable pageable = PageRequest.of(pageIndex, size, Sort.by(direction, sortBy));
 
-        // Tạo Specification để lọc bỏ SUPER_ADMIN và tìm kiếm theo username, email, phone, fullName
-        Specification<User> spec = getUserSpecification(search);
+        Specification<User> spec = getUserSpecification(search, isActive); // Gọi hàm mới có isActive
 
-        Page<User> users = userRepository.findAll(spec, pageable);
-        List<UserResponseForAdmin> user = users.getContent()
-                .stream()
+        Page<User> userPage = userRepository.findAll(spec, pageable);
+
+        List<UserResponseForAdmin> users = userPage.getContent().stream()
                 .map(userMapper::toUserResponseForAdmin)
                 .toList();
 
-        return new UserListResponse(user, users.getTotalElements(), users.getTotalPages(), page, size);
+        return new UserListResponse(users, userPage.getTotalElements(), userPage.getTotalPages(), page, size);
     }
 
     // Tạo Specification để lọc bỏ SUPER_ADMIN và tìm kiếm theo username, email, phone, fullName
-    private static @NotNull Specification<User> getUserSpecification(String search) {
-        Specification<User> spec = (root, query, criteriaBuilder) ->
-                criteriaBuilder.notEqual(root.get("role"), "SUPER_ADMIN"); // Lọc bỏ SUPER_ADMIN
-        // Tạo Specification để tìm kiếm theo username, email, phone, fullName
-        if (search != null && !search.trim().isEmpty()) {
-            Specification<User> searchSpec = (root, query, criteriaBuilder) ->
-                    criteriaBuilder.or(
-                            criteriaBuilder.like(root.get("username"), "%" + search + "%"),
-                            criteriaBuilder.like(root.get("email"), "%" + search + "%"),
-                            criteriaBuilder.like(root.get("phone"), "%" + search + "%"),
-                            criteriaBuilder.like(root.get("fullName"), "%" + search + "%")
-                    );
+    private static @NotNull Specification<User> getUserSpecification(String search, Boolean isActive) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-            spec = spec.and(searchSpec);
-        }
-        return spec;
+            // 1. Lọc bỏ SUPER_ADMIN
+            predicates.add(cb.notEqual(root.get("role"), "SUPER_ADMIN"));
+
+            // 2. Tìm kiếm theo username, email, phone, fullName (không phân biệt hoa thường)
+            if (search != null && !search.trim().isEmpty()) {
+                String keyword = "%" + search.trim().toLowerCase() + "%";
+                Predicate searchPredicate = cb.or(
+                        cb.like(cb.lower(root.get("username")), keyword),
+                        cb.like(cb.lower(root.get("email")), keyword),
+                        cb.like(cb.lower(root.get("phone")), keyword),
+                        cb.like(cb.lower(root.get("fullName")), keyword)
+                );
+                predicates.add(searchPredicate);
+            }
+
+            // 3. Lọc theo trạng thái isActive
+            if (isActive != null) {
+                predicates.add(cb.equal(root.get("isActive"), isActive));
+            }
+
+            // Gộp tất cả điều kiện với AND
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
+
 
     // Get user by id
     public UserResponseForAdmin getMyInfo() {
@@ -200,7 +216,9 @@ public class UserService {
 
         List<Post> posts = postRepository.findAllByUserId(user.getId());
         for (Post post : posts) {
-            post.setStatus(STATUS.BLOCKED);
+            if (post.getStatus() == STATUS.APPROVED) {
+                post.setStatus(STATUS.BLOCKED);
+            }
         }
         postRepository.saveAll(posts);
         log.info("User {} is blocked", user.getUsername());
@@ -236,6 +254,7 @@ public class UserService {
                 post.setStatus(STATUS.APPROVED); // Hoặc trạng thái khác phù hợp
             }
         }
+        postRepository.saveAll(posts);
         log.info("User {} is unblocked", user.getUsername());
     }
 
@@ -322,4 +341,152 @@ public class UserService {
 
         return userRepository.countNewUser(startOfMonth, endOfMonth);
     }
+
+    public void followUser(String userId) {
+        log.info("UserService: Following user {}", userId);
+
+        String currentUsername = securityConfig.getCurrentUsername();
+
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        User userToFollow = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (!currentUser.isActive()) {
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
+        if (currentUser.getRole() == USER_ROLE.SUPER_ADMIN) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        if (currentUser.getId().equals(userToFollow.getId())) {
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
+
+        // Kiểm tra đã follow chưa
+        boolean isAlreadyFollowing = followRepository.existsByFollowerAndFollowing(currentUser, userToFollow);
+        if (isAlreadyFollowing) {
+            throw new AppException(ErrorCode.ALREADY_FOLLOWING);
+        }
+
+        // Tạo follow mới
+        Follow follow = Follow.builder()
+                .follower(currentUser)
+                .following(userToFollow)
+                .build();
+
+        followRepository.save(follow);
+
+        log.info("User {} followed {}", currentUser.getUsername(), userToFollow.getUsername());
+    }
+
+    // Unfollow user
+    public void unfollowUser(String userId) {
+        log.info("UserService: Unfollowing user {}", userId);
+
+        String currentUsername = securityConfig.getCurrentUsername();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User userToUnfollow = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (!currentUser.isActive()) {
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
+        if (currentUser.getRole() == USER_ROLE.SUPER_ADMIN) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        if (currentUser.getId().equals(userToUnfollow.getId())) {
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
+        // Kiểm tra xem đã follow chưa
+        Follow follow = followRepository.findByFollowerAndFollowing(currentUser, userToUnfollow)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOLLOWING));
+        // Xóa follow
+        followRepository.delete(follow);
+    }
+    // Get following users
+    public UserListResponse getFollowingUsers(int page, int size, String sortBy, String order) {
+        log.info("UserService: Getting following users with page: {}, size: {}, sortBy: {}, order: {}", page, size, sortBy, order);
+
+        String currentUsername = securityConfig.getCurrentUsername();
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (!currentUser.isActive()) {
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
+
+        int pageIndex = Math.max(page - 1, 0);
+        int offset = pageIndex * size;
+
+        //  Chuẩn hóa sortBy
+        String orderColumn = switch (sortBy) {
+            case "username" -> "u.username";
+            case "createdAt" -> "u.created_at";
+            default -> "u.created_at"; // mặc định
+        };
+
+        //  Chuẩn hóa thứ tự sắp xếp
+        String orderDirection = "desc".equalsIgnoreCase(order) ? "DESC" : "ASC";
+
+        // Gọi repository để lấy danh sách users kèm số lượng followers/post
+        List<UserFollowerProjection> projectionList = followRepository.findFollowingUsersWithStatsDynamicOrder(
+                currentUser.getId(), orderColumn, orderDirection, size, offset
+        );
+
+        // Map projection → response
+        List<UserResponseForAdmin> userResponses = projectionList.stream()
+                .map(p -> UserResponseForAdmin.builder()
+                        .id(p.getId())
+                        .username(p.getUsername())
+                        .email(p.getEmail())
+                        .phone(p.getPhone())
+                        .fullName(p.getFullName())
+                        .dob(p.getDob())
+                        .role(USER_ROLE.valueOf(p.getRole()))
+                        .avatarUrl(p.getAvatarUrl())
+                        .isActive(p.getIsActive())
+                        .createdAt(p.getCreatedAt())
+                        .postCount(p.getPostCount())
+                        .followerCount(p.getFollowersCount())
+                        .build()
+                ).toList();
+
+        Long total = followRepository.countFollowingByUserId(currentUser.getId());
+
+        return UserListResponse.builder()
+                .users(userResponses)
+                .total(total)
+                .totalPages((int) Math.ceil((double) total / size))
+                .page(page)
+                .size(size)
+                .build();
+    }
+
+    // get user by id
+    public UserResponseForAdmin getUserById(String userId) {
+        log.info("UserService: Getting user by id {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        int postCount = postRepository.countApprovedPostsByUserId(userId).intValue();
+        int followerCount = followRepository.countFollowersByUserId(userId).intValue();
+
+        return UserResponseForAdmin.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .fullName(user.getFullName())
+                .dob(user.getDob())
+                .role(user.getRole())
+                .avatarUrl(user.getAvatarUrl())
+                .isActive(user.getIsActive())
+                .createdAt(LocalDate.from(user.getCreatedAt()))
+                .postCount(postCount)
+                .followerCount(followerCount)
+                .build();
+    }
+
 }

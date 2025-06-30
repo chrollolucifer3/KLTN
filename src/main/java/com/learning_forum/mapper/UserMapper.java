@@ -19,7 +19,10 @@ public interface UserMapper {
 
     @Mapping(source = "role", target = "role")
     @Mapping(source = "isActive", target = "isActive")
+    @Mapping(source = "avatarUrl", target = "avatarUrl")
     UserResponseForAdmin toUserResponseForAdmin(User user);
 
     UserResponse toUserResponseForUser(User user);
+
+    UserResponse toUserResponse(User user);
 }

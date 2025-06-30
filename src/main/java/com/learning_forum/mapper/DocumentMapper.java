@@ -41,4 +41,10 @@ public interface DocumentMapper {
     DocumentResponse toDocumentResponseForAdmin(Document document);
 
     DocumentFromCategoryResponse toDocumentResponse(Document document);
+
+    @Mappings(value = {
+            @Mapping(target = "authorName", source = "user.fullName"),
+            @Mapping(target = "categoryName", source = "category.name"),
+    })
+    DocumentResponse toDocumentResponseForUser(Document document);
 }

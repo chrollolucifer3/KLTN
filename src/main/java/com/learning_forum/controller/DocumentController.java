@@ -2,6 +2,7 @@ package com.learning_forum.controller;
 
 import com.learning_forum.dto.request.ApiResponse;
 import com.learning_forum.dto.request.ApproveOrRejectPostRequest;
+import com.learning_forum.dto.request.DeleteRequest;
 import com.learning_forum.dto.request.UploadDocumentRequest;
 import com.learning_forum.dto.respone.ListDocumentResponse;
 import com.learning_forum.dto.respone.ListDocumentResponseForAdmin;
@@ -76,6 +77,23 @@ public class DocumentController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPER_ADMIN')")
+    @GetMapping("/getAllForAdmin")
+    public ApiResponse<ListDocumentResponseForAdmin> getAllDocumentForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String order,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status
+    ) {
+        return ApiResponse.<ListDocumentResponseForAdmin>builder()
+                .code(200)
+                .message("Success")
+                .result(fileStorageService.getAllDocumentsForAdmin(page, size, sortBy, order, search, status))
+                .build();
+    }
+
     @GetMapping("/getByCategory/{id}")
     public ApiResponse<ListDocumentResponse> getDocumentsByCategory(
             @PathVariable String id,
@@ -111,6 +129,45 @@ public class DocumentController {
                 .code(200)
                 .message("Success")
                 .result(count)
+                .build();
+    }
+
+    //Delete a document
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPER_ADMIN')")
+    @DeleteMapping("/delete/{id}")
+    public ApiResponse<?> deleteDocument(@PathVariable String id) {
+        log.info("DocumentController.DeleteDocument with id: {}", id);
+        fileStorageService.deleteDocument(id);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
+    }
+
+    // lấy danh sách tài liệu đã tải lên của người dùng
+    @GetMapping("/myDocuments")
+    public ApiResponse<ListDocumentResponse> getDocumentsByUserId(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String order,
+            @RequestParam(required = false) String search
+    ) {
+        return ApiResponse.<ListDocumentResponse>builder()
+                .code(200)
+                .message("Success")
+                .result(fileStorageService.getDocumentsByUserId(page, size, sortBy, order, search))
+                .build();
+    }
+
+    //Delete document by id
+    @PostMapping("/delete")
+    public ApiResponse<?> deleteDocumentById(@RequestBody DeleteRequest request) {
+        log.info("DocumentController.DeleteDocumentById with id: {}", request.getId());
+        fileStorageService.deleteDocumentById(request);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
                 .build();
     }
 }

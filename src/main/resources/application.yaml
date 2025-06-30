@@ -26,10 +26,23 @@ spring:
     hibernate:
       ddl-auto: update
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: cuongnguyenxuan0208@gmail.com
+    password: sksu uegc lxua fkui
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 jwt:
   secret: "7M/T%}Om]:Uq'Qi8cqG_k28R:>nvD,lR-]Ug6P*EXI9~$-y-Vh(w?oL]:2(m"
-  expiration: 3
-  refreshable-duration: 3
+  expiration: 7
+  refreshable-duration: 7
+  EXPIRATION_MINUTES: 15
 
 file:
   upload-dir: uploads/Image

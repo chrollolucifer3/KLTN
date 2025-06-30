@@ -1,10 +1,7 @@
 package com.learning_forum.service;
 
 import com.learning_forum.domain.USER_ROLE;
-import com.learning_forum.dto.request.AuthenticationRequest;
-import com.learning_forum.dto.request.LogoutRequest;
-import com.learning_forum.dto.request.RefreshRequest;
-import com.learning_forum.dto.request.UserUpdatePasswordRequest;
+import com.learning_forum.dto.request.*;
 import com.learning_forum.dto.respone.AuthAdminResponse;
 import com.learning_forum.dto.respone.AuthenticationResponse;
 import com.learning_forum.entity.InvalidatedToken;
@@ -30,9 +27,7 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 
 @Slf4j
@@ -53,9 +48,14 @@ public class AuthService {
     @Value("${jwt.refreshable-duration}")
     protected Long REFRESHABLE_DURATION;
 
+    @NonFinal
+    @Value("${jwt.EXPIRATION_MINUTES}")
+    protected Long EXPIRATION_MINUTES;
+
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
     InvalidatedTokenRepository invalidatedTokenRepository;
+    EmailService emailService;
 
     // Login for user
     public AuthenticationResponse login(AuthenticationRequest request) {
@@ -154,6 +154,7 @@ public class AuthService {
             InvalidatedToken invalidatedToken = InvalidatedToken.builder()
                     .id(jit)
                     .expiryTime(expiryTime)
+                    .token(request.getToken())
                     .build();
             invalidatedTokenRepository.save(invalidatedToken); // Lưu token khi logout vào database
         } catch (AppException e) {
@@ -221,5 +222,114 @@ public class AuthService {
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    // Register new user
+    public void register(UserCreationRequest request) {
+        log.info("Register new user with request: {}", request);
+        Map<String, String> errorMap = new HashMap<>();
+
+        if (userRepository.existsUserByUsername(request.getUsername())) {
+            errorMap.put("username", "Tài khoản đã tồn tại");
+        }
+
+        if (userRepository.existsUserByPhone(request.getPhone())) {
+            errorMap.put("phone", "Số điện thoại đã tồn tại");
+        }
+
+        if (userRepository.existsUserByEmail(request.getEmail())) {
+            errorMap.put("email", "Email đã tồn tại");
+        }
+
+        // Nếu có bất kỳ lỗi nào, ném ngoại lệ với thông tin lỗi dạng key-value
+        if (!errorMap.isEmpty()) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, errorMap);
+        }
+        // Mã hóa mật khẩu trước khi lưu
+        request.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (request.getRole() == null) {
+            request.setRole(USER_ROLE.USER); // Mặc định là USER nếu không có role
+        }
+        if (request.getIsActive() == null) {
+            request.setIsActive(true); // Mặc định là active nếu không có trạng thái
+        }
+        // Lưu người dùng mới vào cơ sở dữ liệu
+        User user = User.builder()
+                .username(request.getUsername())
+                .password(request.getPassword())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .role(request.getRole())
+                .isActive(request.getIsActive())
+                .build();
+        userRepository.save(user);
+    }
+
+    // quên mật khẩu
+    public void forgotPassword(ForgotPasswordRequest request) {
+        log.info("Forgot password for user with email: {}", request.getEmail());
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (!user.getIsActive()) {
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
+
+        String token = generateTokenForgotPassword(user.getEmail());
+
+        String resetLink = "http://localhost:3000/reset-password?token=" + token;
+        emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
+    }
+
+    private String generateTokenForgotPassword(String email) {
+        try {
+            JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
+                    .subject(email)
+                    .issuer("learning-forum")
+                    .issueTime(new Date())
+                    .expirationTime(Date.from(Instant.now().plus(EXPIRATION_MINUTES, ChronoUnit.MINUTES)))
+                    .jwtID(UUID.randomUUID().toString())
+                    .claim("type", "forgot_password")
+                    .build();
+
+            JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
+            Payload payload = new Payload(jwtClaimsSet.toJSONObject());
+            JWSObject jwsObject = new JWSObject(header, payload);
+            jwsObject.sign(new MACSigner(secret.getBytes()));
+            return jwsObject.serialize();
+        } catch (JOSEException e) {
+            throw new RuntimeException("Failed to sign token", e);
+        }
+    }
+
+    // Reset password
+    public void resetPassword(ResetPasswordRequest request) throws ParseException, JOSEException {
+        log.info("Reset password for user with token: {}", request.getToken());
+
+        // Kiểm tra token đã bị vô hiệu hóa chưa
+        if (invalidatedTokenRepository.existsByToken(request.getToken())) {
+            throw new AppException(ErrorCode.TOKEN_INVALIDATED);
+        }
+        // Xác thực token
+        SignedJWT signedJWT = verifyToken(request.getToken(), false);
+        String email = signedJWT.getJWTClaimsSet().getSubject();
+        // Lấy người dùng từ email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        // Kiểm tra mật khẩu mới và xác nhận mật khẩu có khớp không
+        if (!request.getPasswordNew().equals(request.getConfirmNewPassword())) {
+            throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getPasswordNew()));
+        userRepository.save(user);
+
+        // Vô hiệu hóa token đã sử dụng, lưu trữ vào InvalidatedToken
+        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(signedJWT.getJWTClaimsSet().getJWTID())
+                .expiryTime(expiryTime)
+                .build();
+        invalidatedTokenRepository.save(invalidatedToken);
     }
 }

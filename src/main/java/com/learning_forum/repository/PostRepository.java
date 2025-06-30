@@ -4,6 +4,7 @@ import com.learning_forum.domain.STATUS;
 import com.learning_forum.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +18,7 @@ import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, String>, JpaSpecificationExecutor<Post> {
     Page<Post> findAllByCategoryIdAndStatus(String categoryId, STATUS status, Pageable pageable);
+    Page<Post> findAllByUserId(String userId, Pageable pageable);
     //JPA tự convert enum STATUS sang String
     List<Post> findTop5ByStatusOrderByCreatedAtDesc(STATUS status);
     Optional<Post> findPostById(String postId);
@@ -37,4 +39,13 @@ public interface PostRepository extends JpaRepository<Post, String>, JpaSpecific
             "FROM Post p WHERE p.createdAt BETWEEN :startTime AND :endTime " +
             "GROUP BY MONTH(p.createdAt)")
     List<Object[]> countPostsByTimeRange(@Param("startTime") LocalDateTime startDate, @Param("endTime") LocalDateTime endDate);
+
+    Page<Post> findAllByStatus(STATUS status, Pageable pageable);
+    Page<Post> findAllByUserIdAndStatus(String userId, STATUS status, Pageable pageable);
+    Page<Post> findByStatusAndTitleContainingIgnoreCase(STATUS status, String title, Pageable pageable);
+
+    // PostRepository.java
+    @Query("SELECT COUNT(p) FROM Post p WHERE p.user.id = :userId AND p.status = 'APPROVED'")
+    Long countApprovedPostsByUserId(@Param("userId") String userId);
+
 }

@@ -16,4 +16,7 @@ public class ListPostResponse {
     private int totalPages;
     private int page;
     private int size;
+
+    public ListPostResponse(List<PostResponse> postResponses, long totalElements, int totalPages, int page, int size) {
+    }
 }

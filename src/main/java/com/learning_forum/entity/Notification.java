@@ -1,35 +1,39 @@
 package com.learning_forum.entity;
-
+import com.learning_forum.domain.NOTIFICATION_TYPE;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-@Setter
-@Getter
 @Entity
+@Table(name = "notifications")
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "notifications")
 public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    User user;
+    @Enumerated(EnumType.STRING)
+    NOTIFICATION_TYPE type;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    String message;
+    String title;
+    String content;
+    String postId;
+    String authorName;
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(nullable = false)
     Boolean isRead = false;
 
-    @Column(nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    LocalDateTime createdAt = LocalDateTime.now();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recipient_id")
+    User recipient; // Người nhận thông báo
 }

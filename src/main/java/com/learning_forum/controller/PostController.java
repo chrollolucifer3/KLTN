@@ -1,10 +1,10 @@
 package com.learning_forum.controller;
 
+import com.learning_forum.domain.STATUS;
 import com.learning_forum.dto.request.*;
-import com.learning_forum.dto.respone.CountPostsByTimeResponse;
-import com.learning_forum.dto.respone.ListFivePostResponse;
-import com.learning_forum.dto.respone.ListPostResponse;
-import com.learning_forum.dto.respone.ListPostResponseForAdmin;
+import com.learning_forum.dto.respone.*;
+import com.learning_forum.entity.Post;
+import com.learning_forum.service.NotificationService;
 import com.learning_forum.service.PostLikeService;
 import com.learning_forum.service.PostService;
 import lombok.AccessLevel;
@@ -25,22 +25,28 @@ public class PostController {
 
     PostService postService;
     PostLikeService postLikeService;
+//    NotificationService notificationService;
 
     @PostMapping
-    public ApiResponse<?> createPost(@RequestBody PostRequest request) {
+    public ApiResponse<PostResponse> createPost(@RequestBody PostRequest request) {
         log.info("PostController.CreatePost with request: {}", request);
-        return ApiResponse.builder()
+
+        // 1. Tạo bài viết
+        PostResponse postResponse = postService.createPost(request);
+
+        return ApiResponse.<PostResponse>builder()
                 .code(200)
                 .message("Success")
-                .result(postService.createPost(request))
+                .result(postResponse)
                 .build();
     }
 
+
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPER_ADMIN')")
     @PostMapping("/approve")
-    public ApiResponse<?> approvePost(@RequestBody ApprovePostRequest request) {
+    public ApiResponse<PostResponse> approvePost(@RequestBody ApprovePostRequest request) {
         log.info("PostController.ApprovePost with request: {}", request);
-        return ApiResponse.builder()
+        return ApiResponse.<PostResponse>builder()
                 .code(200)
                 .message("Success")
                 .result(postService.approvePost(request))
@@ -59,20 +65,37 @@ public class PostController {
     }
 
     // Get all posts
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPER_ADMIN')")
-    @GetMapping("getAll")
+    @GetMapping("/getAll")
     ApiResponse<ListPostResponseForAdmin> getAllPost(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "ASC") String order,
-            @RequestParam(required = false) String search
+            @RequestParam(defaultValue = "DESC") String order,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status
     ) {
         log.info("PostController.GetAllPost with page: {}, size: {}, sortBy: {}, order: {}, search: {}", page, size, sortBy, order, search);
         return ApiResponse.<ListPostResponseForAdmin>builder()
                 .code(200)
                 .message("Success")
-                .result(postService.getAllPosts(page, size, sortBy, order, search))
+                .result(postService.getAllPosts(page, size, sortBy, order, search, status))
+                .build();
+    }
+
+    // Get all posts For Client
+    @GetMapping("/getAllForClient")
+    ApiResponse<ListPostResponseForAdmin> getAllPostForClient(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String order,
+            @RequestParam(required = false) String search
+    ) {
+        log.info("PostController.GetAllPostForClient with page: {}, size: {}, sortBy: {}, order: {}, search: {}", page, size, sortBy, order, search);
+        return ApiResponse.<ListPostResponseForAdmin>builder()
+                .code(200)
+                .message("Success")
+                .result(postService.getAllPostsForClient(page, size, sortBy, order, search))
                 .build();
     }
 
@@ -83,7 +106,7 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "ASC") String order,
+            @RequestParam(defaultValue = "DESC") String order,
             @RequestParam(required = false) String search
     ) {
         log.info("PostController.GetAllPostByCategory with id: {}, page: {}, size: {}, sortBy: {}, order: {}, search: {}", id, page, size, sortBy, order, search);
@@ -157,5 +180,76 @@ public class PostController {
                 .build();
     }
 
+    // Get all posts by user
+    @GetMapping("/user")
+    ApiResponse<ListPostResponseForAdmin> getAllPostByUser(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String order,
+            @RequestParam(required = false)String status
+    ) {
+        log.info("PostController.GetAllPostByUser with: page: {}, size: {}, sortBy: {}, order: {}, status: {}", page, size, sortBy, order, status);
+        return ApiResponse.<ListPostResponseForAdmin>builder()
+                .code(200)
+                .message("Success")
+                .result(postService.getAllPostsByUser(page, size, sortBy, order, status))
+                .build();
+    }
 
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPER_ADMIN')")
+    @PostMapping("/delete/{id}")
+    public ApiResponse<?> deletePost(@PathVariable String id) {
+        postService.deletePost(id);
+        log.info("PostController.DeletePost with id: {}", id);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
+    }
+
+    //get post by user_id
+    @GetMapping("/user/{userId}")
+    ApiResponse<ListPostResponseForAdmin> getPostByUserId(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String order,
+            @RequestParam(required = false) STATUS status
+    ) {
+        log.info("PostController.GetPostByUserId with userId: {}, page: {}, size: {}, sortBy: {}, order: {}, status: {}", userId, page, size, sortBy, order, status);
+        return ApiResponse.<ListPostResponseForAdmin>builder()
+                .code(200)
+                .message("Success")
+                .result(postService.getPostsByUserId(userId, page, size, sortBy, order, status))
+                .build();
+    }
+
+    // Cập nhật bài viết
+    @PostMapping("/update")
+    public ApiResponse<?> updatePost( @RequestBody UpdatePostRequest request) {
+        postService.updatePost(request);
+        return ApiResponse.<PostResponse>builder()
+                .code(200)
+                .message("Success")
+                .build();
+    }
+
+    // Lấy bài viết đã thích của người dùng
+    @GetMapping("/liked")
+    public ApiResponse<ListPostResponseForAdmin> getLikedPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String order,
+            @RequestParam(required = false) String search
+    ) {
+        log.info("PostController.GetLikedPosts with page: {}, size: {}, sortBy: {}, order: {}", page, size, sortBy, order);
+        return ApiResponse.<ListPostResponseForAdmin>builder()
+                .code(200)
+                .message("Success")
+                .result(postService.getLikedPosts(page, size, sortBy, order, search))
+                .build();
+    }
 }

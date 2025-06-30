@@ -10,7 +10,7 @@ import java.util.List;
 @Builder
 public class ListDocumentResponse {
     private String categoryName;
-    private List<DocumentFromCategoryResponse> documents;
+    private List<DocumentResponse> documents;
     private long total;
     private int totalPages;
     private int page;

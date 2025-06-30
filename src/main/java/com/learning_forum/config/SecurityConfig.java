@@ -1,7 +1,9 @@
 package com.learning_forum.config;
 
+import com.learning_forum.entity.User;
 import com.learning_forum.exception.AppException;
 import com.learning_forum.exception.ErrorCode;
+import com.learning_forum.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -16,10 +18,14 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 
 import org.springframework.security.core.Authentication;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.util.List;
 
 
 @Slf4j
@@ -36,7 +42,10 @@ public class SecurityConfig {
             "/users",
             "/auth/login",
             "/auth/logout",
+            "/auth/register",
+            "/auth/forgot-password",
             "/auth/refresh",
+            "auth/reset-password",
             "/admin/login",
             "/admin/logout",
             "/admin/refresh",
@@ -56,7 +65,10 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults()) // Sử dụng cấu hình CORS mặc định
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.POST, PUBLIC_URLS).permitAll() // Cho phép POST tới các URL public
+                        .requestMatchers(HttpMethod.GET, "/post/**").permitAll() // Cho phép GET tới
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/category/all").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated() // Các request còn lại cần xác thực
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(
@@ -104,5 +116,19 @@ public class SecurityConfig {
         }
 
         return authentication.getName(); // Lấy username trực tiếp
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+            return new org.springframework.security.core.userdetails.User(
+                    user.getUsername(),
+                    "", // Không cần mật khẩu
+                    List.of(new SimpleGrantedAuthority(user.getRole().name()))
+            );
+        };
     }
 }

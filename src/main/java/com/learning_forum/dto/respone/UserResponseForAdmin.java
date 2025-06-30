@@ -24,7 +24,9 @@ public class UserResponseForAdmin {
 
     @Enumerated(EnumType.STRING)
     USER_ROLE role;
-
+    String avatarUrl;
     Boolean isActive;
     LocalDate createdAt;
+    int postCount;
+    int followerCount;
 }

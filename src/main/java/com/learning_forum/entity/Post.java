@@ -57,4 +57,7 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<PostLike> likes;
+
+    @Column(nullable = false)
+    int viewsCount = 0;
 }

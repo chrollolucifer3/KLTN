@@ -23,4 +23,7 @@ public class PostResponse {
     String categoryName;
     boolean isLiked;
     int likesCount;
+    int viewsCount;
+    boolean isFollowingAuthor;
+    int authorFollowersCount;
 }

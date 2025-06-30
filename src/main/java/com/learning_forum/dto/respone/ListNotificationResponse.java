@@ -1,8 +1,6 @@
 package com.learning_forum.dto.respone;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
 import java.util.List;
 
 @Getter
@@ -11,8 +9,8 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ListPostResponseForAdmin {
-    List<PostResponse> posts;
+public class ListNotificationResponse {
+    List<NotificationResponse> notifications;
     long total;
     int totalPages;
     int page;

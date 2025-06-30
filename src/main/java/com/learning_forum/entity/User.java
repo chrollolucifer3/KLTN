@@ -51,4 +51,21 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Post> posts;
+
+
+    // Người dùng này đang theo dõi những ai
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<Follow> following;
+
+    // Những người đang theo dõi người dùng này
+    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<Follow> followers;
+
+    public int getFollowersCount() {
+        return followers != null ? followers.size() : 0;
+    }
+
+    public int getFollowingCount() {
+        return following != null ? following.size() : 0;
+    }
 }

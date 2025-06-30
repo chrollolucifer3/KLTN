@@ -44,6 +44,17 @@ public enum ErrorCode {
     REPORT_NOT_FOUND(404, "Không tìm thấy báo cáo", HttpStatus.NOT_FOUND),
     //Document
     DOCUMENT_NOT_FOUND(404, "Không tìm thấy tài liệu", HttpStatus.NOT_FOUND),
+    FILE_DELETION_FAILED(500, "Không thể xóa file", HttpStatus.INTERNAL_SERVER_ERROR),
+    //Follow
+    ALREADY_FOLLOWING(409, "Bạn đã theo dõi người dùng này", HttpStatus.CONFLICT),
+    NOT_FOLLOWING(404, "Bạn chưa theo dõi người dùng này", HttpStatus.NOT_FOUND),
+    INVALID_REQUEST(400, "Không thể theo dõi bản thân", HttpStatus.BAD_REQUEST),
+
+    //Notification
+    NOTIFICATION_NOT_FOUND(404, "Không tìm thấy thông báo", HttpStatus.NOT_FOUND),
+
+    //Token
+    TOKEN_INVALIDATED(400, "Token đã bị thu hồi", HttpStatus.BAD_REQUEST)
     ;
     private final int code;
     private final String message;

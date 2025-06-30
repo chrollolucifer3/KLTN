@@ -13,4 +13,6 @@ public interface InvalidatedTokenRepository extends JpaRepository<InvalidatedTok
     @Transactional
     int deleteByExpiryTimeBefore(LocalDateTime now);
 
+    boolean existsByToken(String token);
+
 }

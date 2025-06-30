@@ -65,4 +65,37 @@ public class AuthController {
                 .message("Success")
                 .build();
     }
+
+    // register
+    @PostMapping("/register")
+    public ApiResponse<?> register(@RequestBody @Valid UserCreationRequest request) {
+        log.info("AuthController.Register with request: {}", request);
+        authService.register(request);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
+    }
+
+    // forgot password
+    @PostMapping("/forgot-password")
+    public ApiResponse<?> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        log.info("AuthController.ForgotPassword with request: {}", request);
+        authService.forgotPassword(request);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
+    }
+
+    // reset password
+    @PostMapping("/reset-password")
+    public ApiResponse<?> resetPassword(@RequestBody @Valid ResetPasswordRequest request) throws ParseException, JOSEException {
+        log.info("AuthController.ResetPassword with request: {}", request);
+        authService.resetPassword(request);
+        return ApiResponse.builder()
+                .code(200)
+                .message("Success")
+                .build();
+    }
 }

@@ -23,6 +23,6 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
     Optional<User> findByUsernameAndRole(String username, USER_ROLE role);
     @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt BETWEEN :start AND :end AND u.isActive = false ")
     int countNewUser(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-
+    Optional<User> findByEmail(String email);
 
 }

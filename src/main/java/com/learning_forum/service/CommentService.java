@@ -37,6 +37,7 @@ public class CommentService {
     CommentMapper commentMapper;
     PostRepository postRepository;
     UserRepository userRepository;
+    NotificationService notificationService;
 
     // Comment on post
     public CommentResponse createComment(CommentRequest request) {
@@ -45,6 +46,10 @@ public class CommentService {
         userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         Comment comment = commentMapper.toComment(request);
+
+        //gửi thông báo đến tác giả bài viết
+        notificationService.notifyAuthorPostCommented(request.getPostId(), request.getUserId());
+
         return commentMapper.toCommentResponse(commentRepository.save(comment));
     }
 

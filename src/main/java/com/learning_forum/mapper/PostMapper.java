@@ -45,6 +45,7 @@ public interface PostMapper {
             @Mapping(target = "categoryId", source = "category.id"),
             @Mapping(target = "authorName", source = "user.fullName"),
             @Mapping(target = "categoryName", source = "category.name"),
+            @Mapping(target = "viewsCount", source = "viewsCount"),
     })
     PostResponse toPostResponseForAdmin(Post post);
 

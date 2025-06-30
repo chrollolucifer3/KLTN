@@ -1,5 +1,6 @@
 package com.learning_forum.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.*;
@@ -18,4 +19,6 @@ public class InvalidatedToken {
     @Id
     String id;
     Date expiryTime;
+    @Column(nullable = false, unique = true)
+    String token;
 }

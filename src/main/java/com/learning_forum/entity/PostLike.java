@@ -3,6 +3,9 @@ package com.learning_forum.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Setter
 @Getter
@@ -25,4 +28,8 @@ public class PostLike {
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     Post post;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    LocalDateTime createdAt;
 }
