@@ -9,5 +9,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateCommentRequest {
-    String content;// Optional, if it's a reply to another comment
+    String id;
+    String content;
 }

@@ -14,7 +14,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserUpdateRequest {
-
     @Email(message = "Email không hợp lệ. Vui lòng nhập email đúng định dạng (vd: example@domain.com)")
     String email;
 

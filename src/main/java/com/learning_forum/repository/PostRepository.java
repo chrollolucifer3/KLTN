@@ -30,7 +30,7 @@ public interface PostRepository extends JpaRepository<Post, String>, JpaSpecific
         ORDER BY likes_count DESC
         LIMIT 5
         """, nativeQuery = true)
-    List<Post> findTop5PostByLikesCount(@Param("status") String status);
+    List<Post> findTop10PostByLikesCount(@Param("status") String status);
     // Khi sử dụng Query phải để kiểu status là String vì JPA không hỗ trợ enum trong native query
     @Query("SELECT COALESCE(COUNT(p), 0) FROM Post p WHERE p.createdAt >= :start AND p.createdAt < :end AND p.status = :status")
     int countByCreatedAtAfterAndStatus(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end, @Param("status") STATUS status);

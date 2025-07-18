@@ -56,10 +56,10 @@ public class AuthController {
     }
 
     // Update password
-    @PostMapping("/updatePassword/{id}")
-    public ApiResponse<?> updatePassword(@PathVariable String id, @RequestBody @Valid UserUpdatePasswordRequest request) {
+    @PostMapping("/updatePassword")
+    public ApiResponse<?> updatePassword( @RequestBody @Valid UserUpdatePasswordRequest request) {
         log.info("AuthController.UpdatePassword with request: {}", request);
-        authService.updatePassword(id, request);
+        authService.updatePassword( request);
         return ApiResponse.builder()
                 .code(200)
                 .message("Success")

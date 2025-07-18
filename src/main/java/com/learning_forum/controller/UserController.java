@@ -63,13 +63,23 @@ public class UserController {
                 .build();
     }
 
-    // Update user
+    // Update user by admin
     @PostMapping("{userId}")
     ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .code(200)
                 .message("Success")
                 .result(userService.updateUser(userId, request))
+                .build();
+    }
+
+    // Update my profile
+    @PostMapping("update-self")
+    ApiResponse<UserResponse> updateMyProfile(@RequestBody @Valid UserUpdateRequest request) {
+        return ApiResponse.<UserResponse>builder()
+                .code(200)
+                .message("Success")
+                .result(userService.updateMyProfile(request))
                 .build();
     }
 

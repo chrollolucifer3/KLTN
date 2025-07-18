@@ -84,8 +84,8 @@ public class CommentService {
     }
 
     // Update comment
-    public void updateComment(String id, UpdateCommentRequest request) {
-        Comment comment = commentRepository.findById(id)
+    public void updateComment(UpdateCommentRequest request) {
+        Comment comment = commentRepository.findById(request.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
         commentMapper.updateComment(comment, request);
         commentRepository.save(comment);

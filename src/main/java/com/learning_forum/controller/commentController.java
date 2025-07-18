@@ -62,10 +62,10 @@ public class commentController {
     }
 
     // Update comment
-    @PostMapping("/update/{id}")
-    public ApiResponse<?> updateComment(@PathVariable String id, @RequestBody UpdateCommentRequest request) {
-        log.info("CommentController.UpdateComment with id: {}, request: {}", id, request);
-        commentService.updateComment(id, request);
+    @PostMapping("/update")
+    public ApiResponse<?> updateComment(@RequestBody UpdateCommentRequest request) {
+        log.info("CommentController.UpdateComment, request: {}", request);
+        commentService.updateComment(request);
         return ApiResponse.builder()
                 .code(200)
                 .message("Success")

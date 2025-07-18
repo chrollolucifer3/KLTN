@@ -1,6 +1,7 @@
 package com.learning_forum.service;
 
 import com.learning_forum.config.SecurityConfig;
+import com.learning_forum.config.SecurityUtil;
 import com.learning_forum.domain.NOTIFICATION_TYPE;
 import com.learning_forum.dto.respone.ListNotificationResponse;
 import com.learning_forum.dto.respone.NotificationResponse;
@@ -40,7 +41,7 @@ public class NotificationService {
     NotificationRepository notificationRepository;
     PostRepository postRepository;
     UserRepository userRepository;
-    SecurityConfig securityConfig;
+    SecurityUtil securityConfig;
 
     /**
      * Gửi thông báo realtime đến followers khi tác giả đăng bài mới

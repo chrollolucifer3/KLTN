@@ -1,6 +1,7 @@
 package com.learning_forum.service;
 
 import com.learning_forum.config.SecurityConfig;
+import com.learning_forum.config.SecurityUtil;
 import com.learning_forum.domain.STATUS;
 import com.learning_forum.dto.request.*;
 import com.learning_forum.dto.respone.*;
@@ -44,7 +45,7 @@ public class PostService {
 
     PostMapper postMapper;
     PostRepository postRepository;
-    SecurityConfig securityConfig;
+    SecurityUtil securityConfig;
     UserRepository userRepository;
     CategoryRepository categoryRepository;
     FollowRepository followRepository;
@@ -245,7 +246,7 @@ public class PostService {
         log.info("Get top 5 most liked posts overall");
         Pageable topFive = PageRequest.of(0, 5);
 
-        List<Post> posts = postRepository.findTop5PostByLikesCount(STATUS.APPROVED.name());
+        List<Post> posts = postRepository.findTop10PostByLikesCount(STATUS.APPROVED.name());
 
         List<PostResponse> postResponses = posts.stream()
                 .map(postMapper::toPostResponse)
@@ -362,6 +363,9 @@ public class PostService {
         // Cập nhật các trường cần thiết
         post.setTitle(request.getTitle());
         post.setContent(request.getContent());
+        if (post.getStatus() != STATUS.APPROVED && post.getStatus() != STATUS.BLOCKED) {
+            post.setStatus(STATUS.PENDING);
+        }
 
         if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId())

@@ -1,6 +1,7 @@
 package com.learning_forum.service;
 
 import com.learning_forum.config.SecurityConfig;
+import com.learning_forum.config.SecurityUtil;
 import com.learning_forum.domain.STATUS;
 import com.learning_forum.domain.USER_ROLE;
 
@@ -53,7 +54,7 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
-    SecurityConfig securityConfig;
+    SecurityUtil securityConfig;
     PostRepository postRepository;
     FollowRepository followRepository;
 
@@ -91,6 +92,39 @@ public class UserService {
         }
 
         return userMapper.toUserResponseForUser(userRepository.save(user));
+    }
+
+    // Cập nhật thông tin người dùng
+    public UserResponse updateMyProfile(UserUpdateRequest request) {
+        log.info("UserService: Updating user info for {}", request);
+        String currentUsername = securityConfig.getCurrentUsername();
+        User user = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (!user.isActive()) {
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
+
+        Map<String, String> errorMap = new HashMap<>();
+        if (userRepository.existsUserByPhone(request.getPhone()) && !request.getPhone().equals(user.getPhone())) {
+            errorMap.put("phone", "Số điện thoại đã tồn tại");
+        }
+        if (userRepository.existsUserByEmail(request.getEmail()) && !request.getEmail().equals(user.getEmail())) {
+            errorMap.put("email", "Email đã tồn tại");
+        }
+        // Nếu có bất kỳ lỗi nào, ném ngoại lệ với thông tin lỗi dạng key-value
+        if (!errorMap.isEmpty()) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, errorMap);
+        }
+        // Cập nhật thông tin người dùng
+        request.setDob(Optional.ofNullable(request.getDob()).orElse(user.getDob()));
+        request.setEmail(Optional.ofNullable(request.getEmail()).orElse(user.getEmail()));
+        request.setPhone(Optional.ofNullable(request.getPhone()).orElse(user.getPhone()));
+        request.setFullName(Optional.ofNullable(request.getFullName()).orElse(user.getFullName()));
+        userMapper.updateUser(user, request);
+        User updatedUser = userRepository.save(user);
+        log.info("User {} updated successfully", updatedUser.getUsername());
+        return userMapper.toUserResponseForUser(updatedUser);
     }
 
     // Get all users

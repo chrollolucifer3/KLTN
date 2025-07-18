@@ -1,5 +1,7 @@
 package com.learning_forum.service;
 
+import com.learning_forum.config.SecurityConfig;
+import com.learning_forum.config.SecurityUtil;
 import com.learning_forum.domain.USER_ROLE;
 import com.learning_forum.dto.request.*;
 import com.learning_forum.dto.respone.AuthAdminResponse;
@@ -21,6 +23,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +59,8 @@ public class AuthService {
     PasswordEncoder passwordEncoder;
     InvalidatedTokenRepository invalidatedTokenRepository;
     EmailService emailService;
+    @Lazy
+    SecurityUtil securityConfig;
 
     // Login for user
     public AuthenticationResponse login(AuthenticationRequest request) {
@@ -210,12 +215,15 @@ public class AuthService {
     }
 
     // Update password
-    public void updatePassword(String id, UserUpdatePasswordRequest request) {
-        log.info("Update password for user: {}", id);
-        User user = userRepository.findById(id)
+    public void updatePassword( UserUpdatePasswordRequest request) {
+        String currentUsername = securityConfig.getCurrentUsername();
+        User user = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (!user.isActive()) {
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
+            throw new AppException(ErrorCode.INVALID_PASSWORD);
         }
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
@@ -257,6 +265,8 @@ public class AuthService {
         User user = User.builder()
                 .username(request.getUsername())
                 .password(request.getPassword())
+                .fullName(request.getFullName())
+                .dob(request.getDob())
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .role(request.getRole())

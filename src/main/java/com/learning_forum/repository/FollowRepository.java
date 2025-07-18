@@ -22,7 +22,7 @@ public interface FollowRepository extends JpaRepository<Follow, String> {
     // lấy số lượng người dùng đang theo dõi user có id là followerId
     @Query("SELECT COUNT(f) FROM Follow f WHERE f.follower.id = :followerId")
     Long countFollowingByUserId(@Param("followerId") String followerId);
-
+    // Lấy danh sách người dùng đang theo dõi user có id là followerId với phân trang và sắp xếp
     @Query(value = """
     SELECT
         u.id AS id,

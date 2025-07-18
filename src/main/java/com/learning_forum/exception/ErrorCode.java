@@ -30,7 +30,7 @@ public enum ErrorCode {
     FILE_TOO_LARGE(400, "Dung lượng file Không được vượt quá 5MB", HttpStatus.BAD_REQUEST),
     INVALID_TOKEN(400, "Token không hợp lệ" , HttpStatus.BAD_REQUEST),
     //PASSWORD
-    PASSWORD_NOT_MATCH(400, "Mật khẩu không khớp", HttpStatus.BAD_REQUEST),
+    PASSWORD_NOT_MATCH(404, "Mật khẩu không khớp", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(400, "Mật khẩu không đúng", HttpStatus.BAD_REQUEST),
 
     //Category

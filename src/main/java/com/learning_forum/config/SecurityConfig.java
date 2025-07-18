@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -34,7 +35,7 @@ import java.util.List;
 @EnableMethodSecurity
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig {
-
+    @Lazy
     CustomJwtDecoder customJwtDecoder;
     JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
@@ -107,16 +108,16 @@ public class SecurityConfig {
      * - Dùng thuật toán HMAC SHA-256 để xác thực chữ ký của JWT.
      */
 
-    //Lấy tài khoản đang đăng nhập
-    public String getCurrentUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        return authentication.getName(); // Lấy username trực tiếp
-    }
+//    //Lấy tài khoản đang đăng nhập
+//    public String getCurrentUsername() {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        if (authentication == null || !authentication.isAuthenticated()) {
+//            throw new AppException(ErrorCode.UNAUTHORIZED);
+//        }
+//
+//        return authentication.getName(); // Lấy username trực tiếp
+//    }
 
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {

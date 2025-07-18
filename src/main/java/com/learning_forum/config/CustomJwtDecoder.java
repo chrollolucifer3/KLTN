@@ -5,6 +5,7 @@ import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -23,7 +24,7 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Value("${jwt.secret}")
     private String secret;
 
-
+    @Lazy
     final AuthService authService;
     NimbusJwtDecoder nimbusJwtDecoder;
 

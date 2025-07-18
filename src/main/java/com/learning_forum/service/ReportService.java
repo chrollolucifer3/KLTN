@@ -14,6 +14,7 @@ import com.learning_forum.mapper.ReportMapper;
 import com.learning_forum.repository.CommentRepository;
 import com.learning_forum.repository.PostRepository;
 import com.learning_forum.repository.ReportRepository;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -103,21 +104,37 @@ public class ReportService {
     // Xoá Bài viết hoặc bình luận theo ID
     public void deletePostOrCommentById(GetPostOrComment request) {
         log.info("Delete post or comment by: {}", request);
+
         if (request.getPostId() != null && request.getCommentId() == null) {
-            // Khoa bài viết theo ID
-            postRepository.findPostById(request.getPostId())
+            // Xoá bài viết
+            Post post = postRepository.findPostById(request.getPostId())
                     .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
-            postRepository.deleteById(request.getPostId());
+            post.setStatus(STATUS.BLOCKED);
+            postRepository.save(post);
+            //         Đánh dấu report ban đầu là đã xử lý
+            Report report = reportRepository.findReportById(request.getReportId())
+                    .orElseThrow(() -> new AppException(ErrorCode.REPORT_NOT_FOUND));
+            report.setStatus(STATUS.APPROVED);
+            reportRepository.save(report);
+
         } else if (request.getCommentId() != null && request.getPostId() == null) {
-            // Xoá bình luận theo ID
+            // Xoá bình luận
+            // Lấy tất cả report liên quan tới comment
+            List<Report> reports = reportRepository.findByCommentId(request.getCommentId());
+            for (Report report : reports) {
+                report.setComment(null); // bỏ liên kết với comment
+                report.setStatus(STATUS.APPROVED); // đánh dấu là đã xử lý
+            }
+            reportRepository.saveAll(reports); // cập nhật lại các report
+
             commentRepository.findCommentById(request.getCommentId())
                     .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+
+            // Sau khi xoá report, mới xoá comment
             commentRepository.deleteById(request.getCommentId());
+
         } else {
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-        Report report = reportRepository.findById(request.getReportId())
-                .orElseThrow(() -> new AppException(ErrorCode.REPORT_NOT_FOUND));
-        report.setStatus(STATUS.APPROVED);
     }
 }

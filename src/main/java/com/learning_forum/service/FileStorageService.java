@@ -1,6 +1,7 @@
 package com.learning_forum.service;
 
 import com.learning_forum.config.SecurityConfig;
+import com.learning_forum.config.SecurityUtil;
 import com.learning_forum.domain.STATUS;
 import com.learning_forum.domain.USER_ROLE;
 import com.learning_forum.dto.request.ApproveOrRejectPostRequest;
@@ -52,7 +53,7 @@ public class FileStorageService {
     DocumentMapper documentMapper;
     CategoryRepository categoryRepository;
     UserRepository userRepository;
-    SecurityConfig securityConfig;
+    SecurityUtil securityConfig;
 
     public String storeFile(MultipartFile file) throws IOException {
         String uploadDir = System.getProperty("user.dir") + "/uploads/Image";
